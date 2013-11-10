@@ -42,7 +42,6 @@ with your Wit instance. You need to change your Activity onCreate function and m
         Wit wit_fragment = (Wit) getFragmentManager().findFragmentByTag("wit_fragment");
         if (wit_fragment != null) {
             wit_fragment.setAccessToken(<YOUR_ACCESS_TOKEN>);
-            wit_fragment.setInstanceId(<YOUR INSTANCE ID>);
         }
     }
 ```
