@@ -1,0 +1,33 @@
+buildscript {
+    repositories {
+        maven { url 'http://repo1.maven.org/maven2' }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.6.1'
+    }
+}
+
+apply plugin: 'android-library'
+
+task wrapper(type: org.gradle.api.tasks.wrapper.Wrapper) {
+    gradleVersion = '1.8'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile('com.google.code.gson:gson:2.2.4')
+    compile('org.apache.directory.studio:org.apache.commons.io:2.4')
+}
+
+android {
+    compileSdkVersion 17
+    buildToolsVersion "17.0.0"
+
+    defaultConfig {
+        minSdkVersion 11
+        targetSdkVersion 17
+    }
+}

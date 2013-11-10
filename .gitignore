@@ -1,0 +1,7 @@
+*.iml
+*.DS_Store
+*~
+.gradle
+.idea
+local.properties
+wit.sdk/build/

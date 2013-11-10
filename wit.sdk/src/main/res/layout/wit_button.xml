@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImageButton xmlns:android="http://schemas.android.com/apk/res/android"
+             android:id="@+id/btnSpeak"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:src="@android:drawable/ic_btn_speak_now"
+             android:cropToPadding="false"
+             android:clickable="true"
+             android:layout_gravity="right"
+             android:focusable="false"
+             android:adjustViewBounds="false"
+             android:baselineAlignBottom="false"
+             android:tint="#9eb7bd"
+             android:background="@drawable/custom_button"/>
