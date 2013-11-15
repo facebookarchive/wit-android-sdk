@@ -165,7 +165,7 @@ public class Wit extends Fragment implements RecognitionListener {
 
     @Override
     public void onError(int error) {
-
+        _witListener.witDidGraspIntent(null, null, null, 0, new Error("Input Text null"));
     }
 
     @Override
