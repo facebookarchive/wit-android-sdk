@@ -3,14 +3,14 @@ buildscript {
         maven { url 'http://repo1.maven.org/maven2' }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.6.+'
+        classpath 'com.android.tools.build:gradle:0.8.+'
     }
 }
 
 apply plugin: 'android-library'
 
-task wrapper(type: org.gradle.api.tasks.wrapper.Wrapper) {
-    gradleVersion = '1.8'
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.10'
 }
 
 repositories {
@@ -24,11 +24,31 @@ dependencies {
 }
 
 android {
-    compileSdkVersion 17
-    buildToolsVersion "17.0.0"
+    compileSdkVersion 19
+    buildToolsVersion "19.0.1"
 
     defaultConfig {
         minSdkVersion 11
-        targetSdkVersion 17
+        targetSdkVersion 19
+    }
+    sourceSets {
+        main {
+            java {
+                srcDir 'src/main/java'
+            }
+        }
     }
 }
+
+task clearJar(type: Delete) {
+    delete 'build/libs/wit.sdk.jar'
+}
+
+task jar(type: Copy) {
+    from('build/bundles/release/')
+    into('build/libs/')
+    include('classes.jar')
+    rename ('classes.jar', 'wit.sdk.jar')
+}
+
+jar.dependsOn(clearJar, build)

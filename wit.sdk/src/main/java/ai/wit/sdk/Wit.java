@@ -5,12 +5,13 @@
 package ai.wit.sdk;
 
 import android.app.Activity;
-import android.support.v4.app.Fragment;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -51,7 +52,7 @@ public class Wit extends Fragment implements RecognitionListener {
         _recIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,
                 ((Activity) _witListener).getApplicationContext().getPackageName());
         _recIntent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Wit analysing...");
-        _recIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,1);
+        _recIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
         _speechRecognizer = SpeechRecognizer.createSpeechRecognizer(((Activity) _witListener).getApplicationContext());
         _speechRecognizer.setRecognitionListener(this);
     }
@@ -60,7 +61,9 @@ public class Wit extends Fragment implements RecognitionListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View button = inflater.inflate(R.layout.wit_button, container, false);
+        Context context = ((Activity) _witListener).getApplicationContext();
+        int resId = context.getResources().getIdentifier("wit_button", "layout", context.getPackageName());
+        View button = inflater.inflate(resId, container, false);
         if (button != null) {
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -76,8 +79,7 @@ public class Wit extends Fragment implements RecognitionListener {
     public void triggerRec(boolean handFree) {
         if (handFree) {
             _speechRecognizer.startListening(_recIntent);
-        }
-        else {
+        } else {
             startActivityForResult(_recIntent, RESULT_SPEECH);
         }
     }
