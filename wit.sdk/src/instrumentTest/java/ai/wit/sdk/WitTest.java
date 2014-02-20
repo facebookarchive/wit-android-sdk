@@ -2,13 +2,14 @@ package ai.wit.sdk;
 
 import android.app.Activity;
 import android.test.AndroidTestCase;
+
+import com.google.gson.JsonElement;
+
+import java.util.HashMap;
+
 /*
     Copyright 2013 Wit Inc. All rights reserved.
  */
-
-import com.google.gson.JsonObject;
-
-import java.util.HashMap;
 
 /**
  * Created by Wit on 7/14/13.
@@ -36,13 +37,13 @@ public class WitTest extends AndroidTestCase{
     private class WitListenerTest extends Activity implements IWitListener {
 
         String _intent;
-        HashMap<String, JsonObject> _entities;
+        HashMap<String, JsonElement> _entities;
         String _body;
         double _confidence;
         Error _error;
 
         @Override
-        public void witDidGraspIntent(String intent, HashMap<String, JsonObject> entities, String body, double confidence, Error error) {
+        public void witDidGraspIntent(String intent, HashMap<String,JsonElement> entities, String body, double confidence, Error error) {
             _intent = intent;
             _entities = entities;
             _body = body;

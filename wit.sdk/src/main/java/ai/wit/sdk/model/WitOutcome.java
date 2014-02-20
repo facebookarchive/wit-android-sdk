@@ -1,6 +1,6 @@
 package ai.wit.sdk.model;
 
-import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
@@ -15,7 +15,7 @@ public class WitOutcome {
     private String _intent;
 
     @SerializedName("entities")
-    private HashMap<String, JsonObject> _entities;
+    private HashMap<String, JsonElement> _entities;
 
     @SerializedName("confidence")
     private double _confidence;
@@ -28,7 +28,7 @@ public class WitOutcome {
         return _intent;
     }
 
-    public HashMap<String, JsonObject> get_entities() {
+    public HashMap<String, JsonElement> get_entities() {
         return _entities;
     }
 

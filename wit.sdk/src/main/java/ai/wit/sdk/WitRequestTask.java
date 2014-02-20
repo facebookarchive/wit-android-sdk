@@ -47,7 +47,7 @@ public class WitRequestTask extends AsyncTask<String, String, String> {
                 urlConnection.disconnect();
             }
         } catch (Exception e) {
-            Log.e("Wit", "An error occurred during the request", e);
+            Log.e("Wit", "An error occurred during the request, did you set your token correctly?", e);
         }
         return response;
     }

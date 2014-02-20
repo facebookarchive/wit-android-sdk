@@ -45,7 +45,7 @@ task zip(type:Zip) {
     include ('drawable-hdpi/custom_button.xml', 'drawable-hdpi/microphone.png', 'layout/wit_button.xml')
     into 'res' // note that this specifies path *in* the archive
     destinationDir buildDir
-    archiveName 'wit-res.zip'
+    archiveName 'wit.res.zip'
 }
 
 task clearJar(type: Delete) {
