@@ -22,8 +22,11 @@ import java.net.URLEncoder;
 public class WitRequestTask extends AsyncTask<String, String, String> {
 
     private final String WIT_URL = "https://api.wit.ai/message?q=";
+    private final String VERSION = "20140501";
     private final String AUTHORIZATION_HEADER = "Authorization";
     private final String BEARER_FORMAT = "Bearer %s";
+    private final String ACCEPT_HEADER = "Accept";
+    private final String ACCEPT_VERSION = "application/vnd.wit." + VERSION;
     private String _accessToken;
 
     public WitRequestTask(String accessToken) {
@@ -39,6 +42,7 @@ public class WitRequestTask extends AsyncTask<String, String, String> {
             URL url = new URL(getUrl);
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.addRequestProperty(AUTHORIZATION_HEADER, String.format(BEARER_FORMAT, _accessToken));
+            urlConnection.addRequestProperty(ACCEPT_HEADER, ACCEPT_VERSION);
             try {
                 final InputStream in = new BufferedInputStream(urlConnection.getInputStream());
                 response = IOUtils.toString(in);
