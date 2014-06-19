@@ -19,17 +19,17 @@ import java.net.URLEncoder;
  * The only purpose of this class is to call Wit async and return the result without any post processing.
  * Created by Wit on 5/30/13.
  */
-public class WitRequestTask extends AsyncTask<String, String, String> {
+public class WitMessageRequestTask extends AsyncTask<String, String, String> {
 
     private final String WIT_URL = "https://api.wit.ai/message?q=";
     private final String VERSION = "20140501";
     private final String AUTHORIZATION_HEADER = "Authorization";
-    private final String BEARER_FORMAT = "Bearer %s";
     private final String ACCEPT_HEADER = "Accept";
+    private final String BEARER_FORMAT = "Bearer %s";
     private final String ACCEPT_VERSION = "application/vnd.wit." + VERSION;
     private String _accessToken;
 
-    public WitRequestTask(String accessToken) {
+    public WitMessageRequestTask(String accessToken) {
         _accessToken = accessToken;
     }
 
