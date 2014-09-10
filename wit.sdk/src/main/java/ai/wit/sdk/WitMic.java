@@ -5,21 +5,26 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.util.Log;
 
+import com.google.gson.JsonElement;
+
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.lang.Thread;
+import java.nio.ByteOrder;
+import java.util.HashMap;
+
+import ai.wit.sdk.IWitListener;
 
 /**
  * Created by aric on 9/9/14.
  */
 
-
 public class WitMic {
-    static final private int SAMPLE_RATE = 10;
+    static final public int SAMPLE_RATE = 44100;
     static final private int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
     static final private int FORMAT = AudioFormat.ENCODING_PCM_16BIT;
-    private boolean isRecording = false;
+    private boolean _isRecording = false;
     private AudioRecord aRecorder = null;
     private PipedInputStream in;
     private PipedOutputStream out;
@@ -32,7 +37,7 @@ public class WitMic {
 
     public void startRecording()
     {
-        isRecording = true;
+        _isRecording = true;
         aRecorder = getRecorder();
         aRecorder.startRecording();
         SamplesReaderThread s = new SamplesReaderThread(aRecorder, out, getMinBufferSize());
@@ -42,7 +47,7 @@ public class WitMic {
     public void stopRecording()
     {
         aRecorder.stop();
-        isRecording = false;
+        _isRecording = false;
         aRecorder = null;
     }
 
@@ -51,7 +56,7 @@ public class WitMic {
     {
         boolean started;
 
-        if (!isRecording) {
+        if (!_isRecording) {
             startRecording();
             started = true;
         } else {
@@ -60,6 +65,10 @@ public class WitMic {
         }
 
         return started;
+    }
+
+    public boolean isRecording() {
+        return _isRecording;
     }
 
 
@@ -84,6 +93,12 @@ public class WitMic {
         return bufferSize;
     }
 
+    public PipedInputStream getInputStream()
+    {
+        return in;
+    }
+
+
     private class SamplesReaderThread extends Thread {
         private AudioRecord iRecorder;
         private PipedOutputStream iOut;
@@ -98,10 +113,14 @@ public class WitMic {
         public void run()
         {
             int nb;
-            byte buffer[] = new byte[1024];
+            byte buffer[] = new byte[iBufferSize];
             try {
                 while ((nb = iRecorder.read(buffer, 0, iBufferSize)) > -1) {
                     iOut.write(buffer, 0, nb);
+                    if (!_isRecording) {
+                        iRecorder.stop();
+                        out.close();
+                    }
                 }
                 iOut.close();
             } catch (IOException e) {

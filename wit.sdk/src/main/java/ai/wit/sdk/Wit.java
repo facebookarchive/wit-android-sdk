@@ -19,7 +19,9 @@ import android.view.ViewGroup;
 
 import com.google.gson.Gson;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.PipedInputStream;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 
@@ -30,114 +32,39 @@ import ai.wit.sdk.model.WitResponse;
  * Recognize intent from text or trigger a voice recognition popin
  * Created by Wit on 5/27/13.
  */
-public class Wit extends Fragment implements RecognitionListener {
+public class Wit {
 
     protected static final int RESULT_SPEECH = 1;
     String _accessToken;
     IWitListener _witListener;
-    Intent _recIntent;
-    SpeechRecognizer _speechRecognizer;
+    WitMic _witMic;
 
-    public Wit() {
-    }
-
-    public void setAccessToken(String accessToken) {
+    public Wit(String accessToken, IWitListener witListener) {
         _accessToken = accessToken;
+        _witListener = witListener;
     }
 
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        _recIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        _recIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        _recIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,
-                ((Activity) _witListener).getApplicationContext().getPackageName());
-        _recIntent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Wit analysing...");
-        _recIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
-        _speechRecognizer = SpeechRecognizer.createSpeechRecognizer(((Activity) _witListener).getApplicationContext());
-        _speechRecognizer.setRecognitionListener(this);
+    public void startListening() throws IOException {
+        _witMic = new WitMic();
+        _witMic.startRecording();
+        PipedInputStream in = _witMic.getInputStream();
+        streamRawAudio(in, "signed-integer", 16, WitMic.SAMPLE_RATE, ByteOrder.LITTLE_ENDIAN);
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        Context context = ((Activity) _witListener).getApplicationContext();
-        int resId = context.getResources().getIdentifier("wit_button", "layout", context.getPackageName());
-        View button = inflater.inflate(resId, container, false);
-        if (button != null) {
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    triggerRec(false);
-                }
-            });
-        }
+    public void stopListening() {
 
-        return button;
+        _witMic.stopRecording();
+        _witMic = null;
     }
 
-    /**
-     * Trigger the recording programmatically
-     * @param handFree when set to true, will not display any UI.
-     */
-    public void triggerRec(boolean handFree) {
-        if (handFree) {
-            _speechRecognizer.startListening(_recIntent);
+    public void toggleListening() throws IOException {
+        if (_witMic == null || !_witMic.isRecording()) {
+            startListening();
         } else {
-            startActivityForResult(_recIntent, RESULT_SPEECH);
+            stopListening();
         }
     }
 
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        try {
-            _witListener = (IWitListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString() + " must implement IWitListener");
-        }
-    }
-
-    public void setWitListener(IWitListener listener) {
-        _witListener = listener;
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case RESULT_SPEECH: {
-                if (resultCode == Activity.RESULT_OK && null != data) {
-                    ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    captureTextIntent(text != null ? text.get(0) : null);
-                }
-                break;
-            }
-        }
-    }
-
-    /**
-     * Returns the meaning extracted from an audio stream
-     * @param audio The audio stream to send over to WIT.AI
-     * @param contentType The content-type of the audio
-     */
-    public void streamSpeech(InputStream audio, String contentType){
-        if (audio == null) {
-            _witListener.witDidGraspIntent(null, null, null, 0, new Error("InputStream null"));
-        }
-        else {
-            WitSpeechRequestTask request = new WitSpeechRequestTask(_accessToken, contentType) {
-                @Override
-                protected void onPostExecute(String result) {
-                    processWitResponse(result);
-                }
-            };
-
-            request.execute(audio);
-        }
-    }
 
     /**
      * Returns the meaning extracted from a Raw stream
@@ -179,52 +106,6 @@ public class Wit extends Fragment implements RecognitionListener {
             }
         };
         request.execute(text);
-    }
-
-    @Override
-    public void onReadyForSpeech(Bundle params) {
-
-    }
-
-    @Override
-    public void onBeginningOfSpeech() {
-
-    }
-
-    @Override
-    public void onRmsChanged(float rmsdB) {
-
-    }
-
-    @Override
-    public void onBufferReceived(byte[] buffer) {
-
-    }
-
-    @Override
-    public void onEndOfSpeech() {
-
-    }
-
-    @Override
-    public void onError(int error) {
-        _witListener.witDidGraspIntent(null, null, null, 0, new Error("Input Text null"));
-    }
-
-    @Override
-    public void onResults(Bundle results) {
-        ArrayList data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-        captureTextIntent(data != null ? (String) data.get(0) : null);
-    }
-
-    @Override
-    public void onPartialResults(Bundle partialResults) {
-
-    }
-
-    @Override
-    public void onEvent(int eventType, Bundle params) {
-
     }
 
     private void processWitResponse(String result) {
