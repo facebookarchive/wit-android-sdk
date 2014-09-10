@@ -3,7 +3,7 @@ buildscript {
         maven { url 'http://repo1.maven.org/maven2' }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.9.+'
+        classpath 'com.android.tools.build:gradle:0.12.+'
     }
 }
 
@@ -20,12 +20,12 @@ repositories {
 dependencies {
     compile('com.google.code.gson:gson:2.2.4')
     compile('org.apache.directory.studio:org.apache.commons.io:2.4')
-    compile('com.android.support:appcompat-v7:+')
+    compile('com.android.support:appcompat-v7:19.1.0')
 }
 
 android {
     compileSdkVersion 19
-    buildToolsVersion "19.0.1"
+    buildToolsVersion "19.1.0"
 
     defaultConfig {
         minSdkVersion 11
