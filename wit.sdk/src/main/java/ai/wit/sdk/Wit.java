@@ -32,7 +32,8 @@ import ai.wit.sdk.model.WitResponse;
  * Recognize intent from text or trigger a voice recognition popin
  * Created by Wit on 5/27/13.
  */
-public class Wit {
+public class Wit implements IWitCoordinator {
+
 
     protected static final int RESULT_SPEECH = 1;
     String _accessToken;
@@ -45,7 +46,8 @@ public class Wit {
     }
 
     public void startListening() throws IOException {
-        _witMic = new WitMic();
+        _witListener.witDidStartListening();
+        _witMic = new WitMic(this);
         _witMic.startRecording();
         PipedInputStream in = _witMic.getInputStream();
         streamRawAudio(in, "signed-integer", 16, WitMic.SAMPLE_RATE, ByteOrder.LITTLE_ENDIAN);
@@ -54,7 +56,7 @@ public class Wit {
     public void stopListening() {
 
         _witMic.stopRecording();
-        _witMic = null;
+        _witListener.witDidStopListening();
     }
 
     public void toggleListening() throws IOException {

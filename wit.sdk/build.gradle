@@ -30,6 +30,10 @@ android {
     defaultConfig {
         minSdkVersion 11
         targetSdkVersion 19
+        ndk {
+            moduleName "witvad"
+            ldLibs "log"
+        }
     }
     sourceSets {
         main {
