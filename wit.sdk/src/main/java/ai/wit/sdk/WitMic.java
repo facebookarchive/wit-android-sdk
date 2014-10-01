@@ -33,6 +33,8 @@ public class WitMic {
     private PipedInputStream in;
     private PipedOutputStream out;
     IWitCoordinator _witCoordinator;
+    protected boolean _detectSpeechStop;
+
     Handler _handler = new Handler() {
         public void handleMessage(Message msg) {
             aRecorder.stop();
@@ -49,12 +51,12 @@ public class WitMic {
     public native int VadStillTalking(short[] arr);
     public native void VadClean();
 
-    public WitMic(IWitCoordinator witCoordinator) throws IOException {
+    public WitMic(IWitCoordinator witCoordinator, boolean detectSpeechStop) throws IOException {
         in = new PipedInputStream();
         out = new PipedOutputStream();
         in.connect(out);
         _witCoordinator = witCoordinator;
-
+        _detectSpeechStop = detectSpeechStop;
     }
 
     public void startRecording()
@@ -150,13 +152,14 @@ public class WitMic {
                     i++;
                     bBuffer = ByteBuffer.wrap(buffer, 0, nb);
                     bufferShort = getShortsFromBytes(buffer, nb);
-                    vadResult = VadStillTalking(bufferShort);
-
-                    if (vadResult == 0) {
-                        //Stop the microphone via a Handler so the stopListeing function
-                        // of the IWitCoordinator interface is called on the Wit.startListening
-                        //calling thread
-                        _handler.sendEmptyMessage(0);
+                    if (_detectSpeechStop == true) {
+                        vadResult = VadStillTalking(bufferShort);
+                        if (vadResult == 0) {
+                            //Stop the microphone via a Handler so the stopListeing function
+                            // of the IWitCoordinator interface is called on the Wit.startListening
+                            //calling thread
+                            _handler.sendEmptyMessage(0);
+                        }
                     }
                     iOut.write(buffer, 0, nb);
                 }

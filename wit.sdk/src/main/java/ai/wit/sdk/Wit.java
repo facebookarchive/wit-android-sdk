@@ -39,6 +39,7 @@ public class Wit implements IWitCoordinator {
     String _accessToken;
     IWitListener _witListener;
     WitMic _witMic;
+    public boolean detectSpeechStop = true;
 
     public Wit(String accessToken, IWitListener witListener) {
         _accessToken = accessToken;
@@ -47,7 +48,7 @@ public class Wit implements IWitCoordinator {
 
     public void startListening() throws IOException {
         _witListener.witDidStartListening();
-        _witMic = new WitMic(this);
+        _witMic = new WitMic(this, detectSpeechStop);
         _witMic.startRecording();
         PipedInputStream in = _witMic.getInputStream();
         streamRawAudio(in, "signed-integer", 16, WitMic.SAMPLE_RATE, ByteOrder.LITTLE_ENDIAN);
