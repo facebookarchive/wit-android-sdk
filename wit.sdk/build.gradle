@@ -60,7 +60,7 @@ jar.dependsOn(clearJar, build)
 
 
 
-task zip(type:Zip) {
+task buildzip(type:Zip) {
     includeEmptyDirs = false
     from ('src/main/res')
     include ('drawable-hdpi/custom_button.xml', 'drawable-hdpi/microphone.png', 'layout/wit_button.xml')
@@ -76,4 +76,4 @@ task zip(type:Zip) {
     archiveName 'wit-android-sdk.zip'
 
 }
-zip.dependsOn(jar);
+buildzip.dependsOn(jar);
