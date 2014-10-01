@@ -44,24 +44,36 @@ android {
     }
 }
 
-task zip(type:Zip) {
-    from ('src/main/res')
-    include ('drawable-hdpi/custom_button.xml', 'drawable-hdpi/microphone.png', 'layout/wit_button.xml')
-    into 'res' // note that this specifies path *in* the archive
-    destinationDir buildDir
-    archiveName 'wit.res.zip'
-}
 
 task clearJar(type: Delete) {
-    delete 'build/libs/wit.sdk.jar'
+    delete buildDir.toString() + '/wit-android-sdk.zip';
 }
 
 task jar(type: Copy) {
-    from('build/bundles/release/')
+    from('build/intermediates/bundles/release/')
     into buildDir
     include('classes.jar')
     rename ('classes.jar', 'wit.sdk.jar')
 }
 
-jar.dependsOn(clearJar, build, zip)
+jar.dependsOn(clearJar, build)
 
+
+
+task zip(type:Zip) {
+    includeEmptyDirs = false
+    from ('src/main/res')
+    include ('drawable-hdpi/custom_button.xml', 'drawable-hdpi/microphone.png', 'layout/wit_button.xml')
+    from (buildDir)
+    include('wit.sdk.jar')
+    from (buildDir.toString() + '/intermediates/bundles/release/')
+    include('jni/')
+    into 'res' // note that this specifies path *in* the archive
+    eachFile { fileCopyDetails ->
+        fileCopyDetails.path = fileCopyDetails.path.replaceFirst("jni", "jniLibs")
+    }
+    destinationDir buildDir
+    archiveName 'wit-android-sdk.zip'
+
+}
+zip.dependsOn(jar);
