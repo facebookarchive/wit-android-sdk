@@ -1,33 +1,31 @@
 Wit-Android
 ===========
 
-Wit SDK for Android
+The Wit.ai Android SDK is a the easiest way to integrate Wit.ai features into your Android application.
+
+The SDK can capture intents and entities:
+
+- from the microphone of the device
+- from a text (using a Java `String`)
+- from an audio stream (using a Java `java.io.InputStream`)
 
 How to build
 ------------
 
-To build the jar & res files
+To build the jar and resources files
 
 ```bash
-$ gradle jar
+$ gradle buildzip
 ```
 
-This will output 2 files `wit.sdk.jar` and `wit.res.zip` into `wit.sdk/output/` directory
+This will output a zip file (`wit.sdk/build/wit-android-sdk.zip`) containing: 
+
+- `wit.sdk.jar`
+- `jniLibs` build of our C library for each platform
+- `layout` and `drawable-*` resources
+
 
 How to use
 ----------
 
-To use our sdk you need to add it as a dependencies of your Android project.
-
-##Gradle dependencies
-
-```
-    compile('com.google.code.gson:gson:2.2.4')
-    compile('org.apache.directory.studio:org.apache.commons.io:2.4')
-    compile('com.android.support:appcompat-v7:+')
-```
-
-
-##Add the Wit fragment into your application
-
-See [Wit Documentation](https://wit.ai/docs/android-tutorial)
+You will find on our website a quick start guide and a fully detailed documentation of our Android SDK: [https://wit.ai/docs/android/](https://wit.ai/docs/android/)
