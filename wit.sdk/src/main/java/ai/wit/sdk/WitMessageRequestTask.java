@@ -6,10 +6,10 @@ package ai.wit.sdk;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -33,6 +33,20 @@ public class WitMessageRequestTask extends AsyncTask<String, String, String> {
         _accessToken = accessToken;
     }
 
+    public static String convertStreamToString(InputStream is) throws Exception {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+        String line;
+
+        while ((line = reader.readLine()) != null) {
+            sb.append(line);
+        }
+
+        is.close();
+
+        return sb.toString();
+    }
+
     @Override
     protected String doInBackground(String... text) {
         String response = null;
@@ -45,7 +59,7 @@ public class WitMessageRequestTask extends AsyncTask<String, String, String> {
             urlConnection.addRequestProperty(ACCEPT_HEADER, ACCEPT_VERSION);
             try {
                 final InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-                response = IOUtils.toString(in);
+                response = convertStreamToString(in);
                 in.close();
             } finally {
                 urlConnection.disconnect();
