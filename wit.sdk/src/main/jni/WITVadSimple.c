@@ -65,9 +65,6 @@ static int wvs_check(wvs_state *state, double *samples, int nb_samples)
     
     action = -1;
     energy = frames_detector_esf_energy(samples, nb_samples);
-
-    sprintf(debug_msg, "energy: %.7f", energy);
-    __android_log_write(ANDROID_LOG_INFO, "WITVADE", debug_msg);
     
     if (state->sequence <= state->init_frames) {
         detector_esf_minimum(state, energy, state->sequence);
@@ -161,8 +158,6 @@ static int detector_esf_check_frame(wvs_state *state, double energy)
     counter = 0;
     char debug_msg[200];
 
-    sprintf(debug_msg, "comparing: %.7f >= %7f\n", fabs(energy - state->min_energy), state->energy_threshold);
-    __android_log_write(ANDROID_LOG_INFO, "WITVAD", debug_msg);
     if (fabs(energy - state->min_energy) >= state->energy_threshold) {
         counter++;
     }
