@@ -147,9 +147,6 @@ public class WitMic {
 
 
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
-//            if (aRecorder.getState() == AudioRecord.STATE_UNINITIALIZED) {
-//                return;
-//            }
             VadInit();
             try {
                 while ((nb = aRecorder.read(buffer, 0, readBufferSize)) > 0) {

@@ -102,7 +102,7 @@ wvs_state *wvs_init(double threshold, int sample_rate)
     state->min_initialized = 0;
     state->init_frames = 30;
     state->energy_threshold = threshold;
-    state->previous_state_maxlen = 30;
+    state->previous_state_maxlen = 50;
     state->previous_state = malloc(sizeof(*state->previous_state) * state->previous_state_maxlen);
     state->talking = 0;
     state->sample_rate = sample_rate;
