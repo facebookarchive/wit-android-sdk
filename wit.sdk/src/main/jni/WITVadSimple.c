@@ -70,6 +70,9 @@ static int wvs_check(wvs_state *state, double *samples, int nb_samples)
         detector_esf_minimum(state, energy, state->sequence);
     }
     counter = detector_esf_check_frame(state, energy);
+    if (state->sequence >= state->init_frames && !counter && !state->talking) {
+        detector_esf_minimum(state, energy, state->sequence);
+    }
     memory_push(state->previous_state, state->previous_state_maxlen, counter);
     if (state->sequence < state->init_frames) {
         state->sequence++;
@@ -77,11 +80,13 @@ static int wvs_check(wvs_state *state, double *samples, int nb_samples)
     }
     if (state->talking == 0 && frame_memory_gte(state->previous_state, 1, 10)) {
         state->talking = 1;
+            __android_log_write(ANDROID_LOG_DEBUG, "WitVAD", "Speak start");
             action = 1;
         }
         else if (state->talking == 1 && frame_memory_lte(state->previous_state, 0, state->previous_state_maxlen)) {
             state->talking = 0;
             action = 0;
+            __android_log_write(ANDROID_LOG_DEBUG, "WitVAD", "Speak end");
         }
     state->sequence++;
     
@@ -97,7 +102,7 @@ wvs_state *wvs_init(double threshold, int sample_rate)
     state->min_initialized = 0;
     state->init_frames = 30;
     state->energy_threshold = threshold;
-    state->previous_state_maxlen = 30;
+    state->previous_state_maxlen = 50;
     state->previous_state = malloc(sizeof(*state->previous_state) * state->previous_state_maxlen);
     state->talking = 0;
     state->sample_rate = sample_rate;
@@ -147,6 +152,7 @@ static double frames_detector_esf_energy(double *samples, int nb_samples)
 
 static void detector_esf_minimum(wvs_state *state, double energy, int n)
 {
+    n = (n > 10) ? 10 : n; //this correspond to 1/10 of a second
     state->min_energy = (state->min_energy * n + energy) / (n + 1);
     state->min_initialized = 1;
 }
@@ -158,7 +164,7 @@ static int detector_esf_check_frame(wvs_state *state, double energy)
     counter = 0;
     char debug_msg[200];
 
-    if (fabs(energy - state->min_energy) >= state->energy_threshold) {
+    if ((0 - (energy - state->min_energy)) >= state->energy_threshold) {
         counter++;
     }
     
