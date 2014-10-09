@@ -1,6 +1,5 @@
 package ai.wit.sdk;
 
-import android.app.Activity;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
@@ -8,17 +7,11 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.google.gson.JsonElement;
-
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.lang.Thread;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.HashMap;
 
-import ai.wit.sdk.IWitListener;
 
 /**
  * Created by aric on 9/9/14.
@@ -37,7 +30,6 @@ public class WitMic {
 
     Handler _handler = new Handler() {
         public void handleMessage(Message msg) {
-            aRecorder.stop();
             _witCoordinator.stopListening();
         }
     };
@@ -48,7 +40,7 @@ public class WitMic {
     }
 
     public native int VadInit();
-    public native int VadStillTalking(short[] arr);
+    public native int VadStillTalking(short[] arr, int length);
     public native void VadClean();
 
     public WitMic(IWitCoordinator witCoordinator, boolean detectSpeechStop) throws IOException {
@@ -61,17 +53,27 @@ public class WitMic {
 
     public void startRecording()
     {
-        _isRecording = true;
-        aRecorder = getRecorder();
-        SamplesReaderThread s = new SamplesReaderThread(this, out, getMinBufferSize());
-        s.start();
-
+        if (!_isRecording) {
+            aRecorder = getRecorder();
+            if (aRecorder.getState() == AudioRecord.STATE_INITIALIZED) {
+                _isRecording = true;
+                aRecorder.startRecording();
+                SamplesReaderThread s = new SamplesReaderThread(this, out, getMinBufferSize());
+                s.start();
+            } else {
+                Log.d("WitMic", "AudioRecord not initialized, calling stop for cleaning!");
+                stopRecording();
+            }
+        }
     }
 
     public void stopRecording()
     {
-        aRecorder.stop();
-        _isRecording = false;
+        if (_isRecording) {
+            aRecorder.stop();
+            aRecorder.release();
+            _isRecording = false;
+        }
     }
 
 
@@ -138,22 +140,25 @@ public class WitMic {
         {
             int nb;
             int readBufferSize = iBufferSize;
-            byte buffer[] = new byte[readBufferSize];
-            short[] bufferShort;
+            byte[] bytes = new byte[readBufferSize];
+            short buffer[] = new short[readBufferSize];
             int vadResult;
-            ByteBuffer bBuffer;
-            int i = 0;
+            int skippingSamples = 0;
+
 
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
-            aRecorder.startRecording();
+//            if (aRecorder.getState() == AudioRecord.STATE_UNINITIALIZED) {
+//                return;
+//            }
             VadInit();
             try {
                 while ((nb = aRecorder.read(buffer, 0, readBufferSize)) > 0) {
-                    i++;
-                    bBuffer = ByteBuffer.wrap(buffer, 0, nb);
-                    bufferShort = getShortsFromBytes(buffer, nb);
-                    if (_detectSpeechStop == true) {
-                        vadResult = VadStillTalking(bufferShort);
+
+                    if (skippingSamples < SAMPLE_RATE) {
+                        skippingSamples += nb;
+                    }
+                    if (skippingSamples >= SAMPLE_RATE && _detectSpeechStop == true) {
+                        vadResult = VadStillTalking(buffer, nb);
                         if (vadResult == 0) {
                             //Stop the microphone via a Handler so the stopListeing function
                             // of the IWitCoordinator interface is called on the Wit.startListening
@@ -161,7 +166,8 @@ public class WitMic {
                             _handler.sendEmptyMessage(0);
                         }
                     }
-                    iOut.write(buffer, 0, nb);
+                    short2byte(buffer, nb, bytes);
+                    iOut.write(bytes, 0, nb * 2);
                 }
                 iOut.close();
             } catch (IOException e) {
@@ -170,26 +176,13 @@ public class WitMic {
             _witMic.VadClean();
         }
 
-        protected short[] getShortsFromBytes(byte[] bytes, int length)
+        protected void short2byte(short[] shorts, int nb, byte[] bytes)
         {
-            short[] shorts = new short[length / 2];
-            ByteBuffer bb;
-            short shortVal;
-            int shorti = 0;
-            int i = 0;
-
-            while (i < length) {
-                bb = ByteBuffer.allocate(2);
-                bb.order(ByteOrder.LITTLE_ENDIAN);
-                bb.put(bytes[i]);
-                bb.put(bytes[i + 1]);
-                shortVal = bb.getShort(0);
-                shorts[shorti] = shortVal;
-                shorti++;
-                i += 2;
+            for (int i = 0; i < nb; i++) {
+                bytes[i * 2] = (byte)(shorts[i] & 0xff);
+                bytes[i * 2 + 1] = (byte)((shorts[i] >> 8) & 0xff);
             }
-
-            return shorts;
         }
+
     }
 }

@@ -8,7 +8,7 @@ static wvs_state* wit_vad_g_struct = 0;
 int Java_ai_wit_sdk_WitMic_VadInit()
 {
     double th = 8.0;
-    int sample_rate = 44100;
+    int sample_rate = 16000;
 
     wit_vad_g_struct = wvs_init(th, sample_rate);
 
@@ -16,22 +16,30 @@ int Java_ai_wit_sdk_WitMic_VadInit()
 }
 
 
-int Java_ai_wit_sdk_WitMic_VadStillTalking(JNIEnv *env, jobject obj, jshortArray arr)
+int Java_ai_wit_sdk_WitMic_VadStillTalking(JNIEnv *env, jobject obj, jshortArray java_arr, jint arr_len)
 {
   short int *samples;
-  jsize len = (*env)->GetArrayLength(env, arr);
   int i, sum = 0;
-  jint *body = (*env)->GetIntArrayElements(env, arr, 0);
-  samples = malloc(sizeof(*samples) * len);
-  for (i=0; i<len; i++) {
-    samples[i] = body[i];
-  }
-  (*env)->ReleaseIntArrayElements(env, arr, body, 0);
+  int result;
+  jshort *native_arr = (*env)->GetShortArrayElements(env, java_arr, NULL);
 
-  return wvs_still_talking(wit_vad_g_struct, samples, len);
+  samples = malloc(sizeof(*samples) * arr_len);
+  for (i = 0; i < arr_len; i++) {
+    samples[i] = native_arr[i];
+
+  }
+  (*env)->ReleaseShortArrayElements(env, java_arr, native_arr, 0);
+
+  result = wvs_still_talking(wit_vad_g_struct, samples, arr_len);
+  free(samples);
+
+  return result;
 }
 
 void Java_ai_wit_sdk_WitMic_VadClean()
 {
-    wvs_clean(wit_vad_g_struct);
+    if (wit_vad_g_struct) {
+        wvs_clean(wit_vad_g_struct);
+        wit_vad_g_struct = 0;
+    }
 }
