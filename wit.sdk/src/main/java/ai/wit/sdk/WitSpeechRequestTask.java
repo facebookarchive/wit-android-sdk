@@ -14,6 +14,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import ai.wit.sdk.IWitListener;
+
 /**
  * The request class.
  * The only purpose of this class is to call Wit async and return the result without any post processing.
@@ -31,18 +33,25 @@ public class WitSpeechRequestTask extends AsyncTask<InputStream, String, String>
     private final String BEARER_FORMAT = "Bearer %s";
     private String _accessToken;
     private String _contentType;
+    private IWitListener _witListener;
 
-    public WitSpeechRequestTask(String accessToken, String contentType) {
+    public WitSpeechRequestTask(String accessToken, String contentType, IWitListener witListener) {
         _accessToken = accessToken;
         _contentType = contentType;
+        _witListener = witListener;
     }
 
     @Override
     protected String doInBackground(InputStream... speech) {
         String response = null;
+        String messageId = _witListener.witGenerateMessageId();
+        String fullUrl = WIT_SPEECH_URL;
         try {
             Log.d("Wit", "Requesting SPEECH ...." + _contentType);
-            URL url = new URL(WIT_SPEECH_URL);
+            if (messageId != null) {
+                 fullUrl = WIT_SPEECH_URL + "?msg_id=" + messageId;
+            }
+            URL url = new URL(fullUrl);
             Log.d("Wit", "Posting speech to " + WIT_SPEECH_URL);
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setDoOutput(true);

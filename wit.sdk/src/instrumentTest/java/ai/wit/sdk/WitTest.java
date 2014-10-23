@@ -41,14 +41,16 @@ public class WitTest extends AndroidTestCase{
         String _body;
         double _confidence;
         Error _error;
+        String _messageId;
 
         @Override
-        public void witDidGraspIntent(String intent, HashMap<String,JsonElement> entities, String body, double confidence, Error error) {
+        public void witDidGraspIntent(String intent, HashMap<String,JsonElement> entities, String body, double confidence, String messageId, Error error) {
             _intent = intent;
             _entities = entities;
             _body = body;
             _confidence = confidence;
             _error = error;
+            _messageId = messageId;
         }
     }
 }

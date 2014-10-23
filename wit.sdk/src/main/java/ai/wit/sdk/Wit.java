@@ -79,12 +79,12 @@ public class Wit implements IWitCoordinator {
      */
     public void streamRawAudio(InputStream audio, String encoding, int bits, int rate, ByteOrder order){
        if (audio == null ) {
-           _witListener.witDidGraspIntent(null, null, null, 0, new Error("InputStream null"));
+           _witListener.witDidGraspIntent(null, null, null, 0, null, new Error("InputStream null"));
        }
        else {
            String contentType = String.format("audio/raw;encoding=%s;bits=%s;rate=%s;endian=%s",
                    encoding, String.valueOf(bits), String.valueOf(rate), order == ByteOrder.LITTLE_ENDIAN ? "little" : "big");
-           WitSpeechRequestTask request = new WitSpeechRequestTask(_accessToken, contentType) {
+           WitSpeechRequestTask request = new WitSpeechRequestTask(_accessToken, contentType, _witListener) {
                @Override
                protected void onPostExecute(String result) {
                    processWitResponse(result);
@@ -101,7 +101,7 @@ public class Wit implements IWitCoordinator {
      */
     public void captureTextIntent(String text) {
         if (text == null)
-            _witListener.witDidGraspIntent(null, null, null, 0, new Error("Input Text null"));
+            _witListener.witDidGraspIntent(null, null, null, 0, null, new Error("Input Text null"));
         WitMessageRequestTask request = new WitMessageRequestTask(_accessToken) {
             @Override
             protected void onPostExecute(String result) {
@@ -124,14 +124,14 @@ public class Wit implements IWitCoordinator {
             errorDuringRecognition = new Error(e.getMessage());
         }
         if (errorDuringRecognition != null) {
-            _witListener.witDidGraspIntent(null, null, null, 0, errorDuringRecognition);
+            _witListener.witDidGraspIntent(null, null, null, 0, null, errorDuringRecognition);
         } else if (response == null) {
-            _witListener.witDidGraspIntent(null, null, null, 0, new Error("Response null"));
+            _witListener.witDidGraspIntent(null, null, null, 0, null, new Error("Response null"));
         } else {
             Log.d("Wit", "didGraspIntent Correctly " + response.getOutcome().get_intent());
             _witListener.witDidGraspIntent(response.getOutcome().get_intent(),
                     response.getOutcome().get_entities(),
-                    response.getBody(), response.getOutcome().get_confidence(), null);
+                    response.getBody(), response.getOutcome().get_confidence(), response.getMsgId(), null);
         }
     }
 }
