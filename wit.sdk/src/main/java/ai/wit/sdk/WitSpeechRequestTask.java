@@ -75,7 +75,7 @@ public class WitSpeechRequestTask extends AsyncTask<InputStream, String, String>
                 urlConnection.disconnect();
             }
         } catch (Exception e) {
-            Log.e("Wit", "An error occurred during the request, did you set your token correctly? Is the content-type correct ?", e);
+            Log.d("Wit", "An error occurred during the request: " + e.getMessage());
         }
         return response;
     }

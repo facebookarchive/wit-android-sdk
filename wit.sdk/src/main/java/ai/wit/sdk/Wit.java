@@ -34,12 +34,18 @@ import ai.wit.sdk.model.WitResponse;
  */
 public class Wit implements IWitCoordinator {
 
+    public enum vadConfig {
+        disabled,
+        detectSpeechStop,
+        full
+    }
 
     protected static final int RESULT_SPEECH = 1;
     String _accessToken;
     IWitListener _witListener;
     WitMic _witMic;
-    public boolean detectSpeechStop = true;
+    public vadConfig vad = vadConfig.detectSpeechStop;
+    PipedInputStream _in;
 
     public Wit(String accessToken, IWitListener witListener) {
         _accessToken = accessToken;
@@ -48,16 +54,23 @@ public class Wit implements IWitCoordinator {
 
     public void startListening() throws IOException {
         _witListener.witDidStartListening();
-        _witMic = new WitMic(this, detectSpeechStop);
+        _witMic = new WitMic(this, vad);
         _witMic.startRecording();
-        PipedInputStream in = _witMic.getInputStream();
-        streamRawAudio(in, "signed-integer", 16, WitMic.SAMPLE_RATE, ByteOrder.LITTLE_ENDIAN);
+        _in = _witMic.getInputStream();
+        if (vad != vadConfig.full) {
+            voiceActivityStarted();
+        }
     }
 
     public void stopListening() {
 
         _witMic.stopRecording();
         _witListener.witDidStopListening();
+    }
+
+    @Override
+    public void voiceActivityStarted() {
+        streamRawAudio(_in, "signed-integer", 16, WitMic.SAMPLE_RATE, ByteOrder.LITTLE_ENDIAN);
     }
 
     public void toggleListening() throws IOException {
@@ -82,6 +95,7 @@ public class Wit implements IWitCoordinator {
            _witListener.witDidGraspIntent(null, null, null, 0, new Error("InputStream null"));
        }
        else {
+           Log.d(getClass().getName(), "streamRawAudio started.");
            String contentType = String.format("audio/raw;encoding=%s;bits=%s;rate=%s;endian=%s",
                    encoding, String.valueOf(bits), String.valueOf(rate), order == ByteOrder.LITTLE_ENDIAN ? "little" : "big");
            WitSpeechRequestTask request = new WitSpeechRequestTask(_accessToken, contentType) {
