@@ -35,11 +35,13 @@ public class WitSpeechRequestTask extends AsyncTask<InputStream, String, String>
     private String _accessToken;
     private String _contentType;
     private JsonObject _context;
+    private IWitListener _witListener;
 
-    public WitSpeechRequestTask(String accessToken, String contentType, JsonObject context) {
+    public WitSpeechRequestTask(String accessToken, String contentType, JsonObject context, IWitListener witListener) {
         _accessToken = accessToken;
         _contentType = contentType;
         _context = context;
+        _witListener = witListener;
     }
 
     @Override
@@ -47,7 +49,12 @@ public class WitSpeechRequestTask extends AsyncTask<InputStream, String, String>
         String response = null;
         try {
             Log.d("Wit", "Requesting SPEECH ...." + _contentType);
-            URL url = new URL(buildUri());
+            WitRequest witRequest = new WitRequest(_witListener, _context);
+            String urlStr = witRequest
+                    .buildUri("speech")
+                    .build()
+                    .toString();
+            URL url = new URL(urlStr);
             Log.d("Wit", "Posting speech to " + url.toString());
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setDoOutput(true);
@@ -85,21 +92,7 @@ public class WitSpeechRequestTask extends AsyncTask<InputStream, String, String>
         return response;
     }
 
-    protected String buildUri() {
-        WitRequest witRequest = new WitRequest();
-        Builder uriBuilder;
 
-
-        uriBuilder = witRequest.getBase();
-        uriBuilder.appendPath("speech");
-        if (_context != null) {
-            Gson gson = new Gson();
-            String jsonContext = gson.toJson(_context);
-            uriBuilder.appendQueryParameter("context", jsonContext);
-        }
-
-        return uriBuilder.build().toString();
-    }
 
     @Override
     protected void onPostExecute(String result) {

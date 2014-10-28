@@ -31,10 +31,12 @@ public class WitMessageRequestTask extends AsyncTask<String, String, String> {
     private final String ACCEPT_VERSION = "application/vnd.wit." + WitRequest.version;
     private String _accessToken;
     private JsonObject _context;
+    private IWitListener _witListener;
 
-    public WitMessageRequestTask(String accessToken, JsonObject context) {
+    public WitMessageRequestTask(String accessToken, JsonObject context, IWitListener witListener) {
         _accessToken = accessToken;
         _context = context;
+        _witListener = witListener;
     }
 
     public static String convertStreamToString(InputStream is) throws Exception {
@@ -56,10 +58,15 @@ public class WitMessageRequestTask extends AsyncTask<String, String, String> {
         String response = null;
         try {
             String message = text[0];
+            WitRequest witRequest = new WitRequest(_witListener, _context);
             Log.d("Wit", "Requesting ...." + text[0]);
-            String getUrl = buildUri(message);
-            Log.d(getClass().getName(), "URL IS: " + getUrl);
-            URL url = new URL(getUrl);
+            String urlStr = witRequest
+                    .buildUri("message")
+                    .appendQueryParameter("q", message)
+                    .build()
+                    .toString();
+            Log.d(getClass().getName(), "URL IS: " + urlStr);
+            URL url = new URL(urlStr);
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.addRequestProperty(AUTHORIZATION_HEADER, String.format(BEARER_FORMAT, _accessToken));
             urlConnection.addRequestProperty(ACCEPT_HEADER, ACCEPT_VERSION);
@@ -74,22 +81,6 @@ public class WitMessageRequestTask extends AsyncTask<String, String, String> {
             Log.e("Wit", "An error occurred during the request, did you set your token correctly?", e);
         }
         return response;
-    }
-
-    protected String buildUri(String message) {
-        WitRequest witRequest = new WitRequest();
-        Uri.Builder uriBuilder;
-
-        uriBuilder = witRequest.getBase();
-        uriBuilder.appendPath("message");
-        uriBuilder.appendQueryParameter("q", message);
-        if (_context != null) {
-            Gson gson = new Gson();
-            String jsonContext = gson.toJson(_context);
-            uriBuilder.appendQueryParameter("context", jsonContext);
-        }
-
-        return uriBuilder.build().toString();
     }
 
     @Override

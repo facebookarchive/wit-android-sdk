@@ -97,13 +97,13 @@ public class Wit implements IWitCoordinator {
      */
     public void streamRawAudio(InputStream audio, String encoding, int bits, int rate, ByteOrder order){
        if (audio == null ) {
-           _witListener.witDidGraspIntent(null, new Error("InputStream null"));
+           _witListener.witDidGraspIntent(null, null, new Error("InputStream null"));
        }
        else {
            Log.d(getClass().getName(), "streamRawAudio started.");
            String contentType = String.format("audio/raw;encoding=%s;bits=%s;rate=%s;endian=%s",
                    encoding, String.valueOf(bits), String.valueOf(rate), order == ByteOrder.LITTLE_ENDIAN ? "little" : "big");
-           WitSpeechRequestTask request = new WitSpeechRequestTask(_accessToken, contentType, _context) {
+           WitSpeechRequestTask request = new WitSpeechRequestTask(_accessToken, contentType, _context, _witListener) {
                @Override
                protected void onPostExecute(String result) {
                    processWitResponse(result);
@@ -120,8 +120,8 @@ public class Wit implements IWitCoordinator {
      */
     public void captureTextIntent(String text) {
         if (text == null)
-            _witListener.witDidGraspIntent(null, new Error("Input Text null"));
-        WitMessageRequestTask request = new WitMessageRequestTask(_accessToken, _context) {
+            _witListener.witDidGraspIntent(null, null, new Error("Input Text null"));
+        WitMessageRequestTask request = new WitMessageRequestTask(_accessToken, _context, _witListener) {
             @Override
             protected void onPostExecute(String result) {
                 processWitResponse(result);
@@ -143,15 +143,15 @@ public class Wit implements IWitCoordinator {
             errorDuringRecognition = new Error(e.getMessage());
         }
         if (errorDuringRecognition != null) {
-            _witListener.witDidGraspIntent(null, errorDuringRecognition);
+            _witListener.witDidGraspIntent(null, null, errorDuringRecognition);
         } else if (response == null) {
-            _witListener.witDidGraspIntent(null, new Error("Response null"));
+            _witListener.witDidGraspIntent(null, null, new Error("Response null"));
         } else if (response.getOutcomes().size() == 0) {
-            _witListener.witDidGraspIntent(null, new Error("No outcome"));
+            _witListener.witDidGraspIntent(null, null, new Error("No outcome"));
         }
         else {
             Log.d(TAG, "Wit did grasp " + response.getOutcomes().size() +" outcome(s)");
-            _witListener.witDidGraspIntent(response.getOutcomes(), null);
+            _witListener.witDidGraspIntent(response.getOutcomes(), response.getMsgId(), null);
         }
     }
 
