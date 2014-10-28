@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,6 +48,7 @@ public class Wit implements IWitCoordinator {
     WitMic _witMic;
     public vadConfig vad = vadConfig.detectSpeechStop;
     PipedInputStream _in;
+    private JsonObject _context;
 
     public Wit(String accessToken, IWitListener witListener) {
         _accessToken = accessToken;
@@ -101,7 +103,7 @@ public class Wit implements IWitCoordinator {
            Log.d(getClass().getName(), "streamRawAudio started.");
            String contentType = String.format("audio/raw;encoding=%s;bits=%s;rate=%s;endian=%s",
                    encoding, String.valueOf(bits), String.valueOf(rate), order == ByteOrder.LITTLE_ENDIAN ? "little" : "big");
-           WitSpeechRequestTask request = new WitSpeechRequestTask(_accessToken, contentType) {
+           WitSpeechRequestTask request = new WitSpeechRequestTask(_accessToken, contentType, _context) {
                @Override
                protected void onPostExecute(String result) {
                    processWitResponse(result);
@@ -119,7 +121,7 @@ public class Wit implements IWitCoordinator {
     public void captureTextIntent(String text) {
         if (text == null)
             _witListener.witDidGraspIntent(null, new Error("Input Text null"));
-        WitMessageRequestTask request = new WitMessageRequestTask(_accessToken) {
+        WitMessageRequestTask request = new WitMessageRequestTask(_accessToken, _context) {
             @Override
             protected void onPostExecute(String result) {
                 processWitResponse(result);
@@ -151,5 +153,9 @@ public class Wit implements IWitCoordinator {
             Log.d(TAG, "Wit did grasp " + response.getOutcomes().size() +" outcome(s)");
             _witListener.witDidGraspIntent(response.getOutcomes(), null);
         }
+    }
+
+    public void setContext(JsonObject jo) {
+        _context = jo;
     }
 }

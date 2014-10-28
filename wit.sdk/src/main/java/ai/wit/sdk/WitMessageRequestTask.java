@@ -3,8 +3,12 @@
  */
 package ai.wit.sdk;
 
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -21,16 +25,16 @@ import java.net.URLEncoder;
  */
 public class WitMessageRequestTask extends AsyncTask<String, String, String> {
 
-    private final String WIT_URL = "https://api.wit.ai/message?q=";
-    private final String VERSION = "20140923";
     private final String AUTHORIZATION_HEADER = "Authorization";
     private final String ACCEPT_HEADER = "Accept";
     private final String BEARER_FORMAT = "Bearer %s";
-    private final String ACCEPT_VERSION = "application/vnd.wit." + VERSION;
+    private final String ACCEPT_VERSION = "application/vnd.wit." + WitRequest.version;
     private String _accessToken;
+    private JsonObject _context;
 
-    public WitMessageRequestTask(String accessToken) {
+    public WitMessageRequestTask(String accessToken, JsonObject context) {
         _accessToken = accessToken;
+        _context = context;
     }
 
     public static String convertStreamToString(InputStream is) throws Exception {
@@ -51,8 +55,10 @@ public class WitMessageRequestTask extends AsyncTask<String, String, String> {
     protected String doInBackground(String... text) {
         String response = null;
         try {
+            String message = text[0];
             Log.d("Wit", "Requesting ...." + text[0]);
-            final String getUrl = String.format("%s%s", WIT_URL, URLEncoder.encode(text[0], "utf-8"));
+            String getUrl = buildUri(message);
+            Log.d(getClass().getName(), "URL IS: " + getUrl);
             URL url = new URL(getUrl);
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.addRequestProperty(AUTHORIZATION_HEADER, String.format(BEARER_FORMAT, _accessToken));
@@ -68,6 +74,22 @@ public class WitMessageRequestTask extends AsyncTask<String, String, String> {
             Log.e("Wit", "An error occurred during the request, did you set your token correctly?", e);
         }
         return response;
+    }
+
+    protected String buildUri(String message) {
+        WitRequest witRequest = new WitRequest();
+        Uri.Builder uriBuilder;
+
+        uriBuilder = witRequest.getBase();
+        uriBuilder.appendPath("message");
+        uriBuilder.appendQueryParameter("q", message);
+        if (_context != null) {
+            Gson gson = new Gson();
+            String jsonContext = gson.toJson(_context);
+            uriBuilder.appendQueryParameter("context", jsonContext);
+        }
+
+        return uriBuilder.build().toString();
     }
 
     @Override
