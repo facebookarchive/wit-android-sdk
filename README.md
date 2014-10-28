@@ -28,4 +28,4 @@ This will output a zip file (`wit.sdk/build/wit-android-sdk.zip`) containing:
 How to use
 ----------
 
-You will find on our website a quick start guide and a fully detailed documentation of our Android SDK: [https://wit.ai/docs/android/](https://wit.ai/docs/android/)
+You will find on our website a quick start guide and a fully detailed documentation of our Android SDK: [https://wit.ai/docs/android/2.0.1](https://wit.ai/docs/android/2.0.1)
