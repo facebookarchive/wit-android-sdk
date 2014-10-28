@@ -4,27 +4,15 @@
 
 package ai.wit.sdk;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
-import android.support.v4.app.Fragment;
+
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
 
 import ai.wit.sdk.model.WitResponse;
 
