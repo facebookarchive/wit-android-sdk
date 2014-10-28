@@ -22,7 +22,7 @@ import java.net.URL;
 public class WitSpeechRequestTask extends AsyncTask<InputStream, String, String> {
 
     private final String WIT_SPEECH_URL = "https://api.wit.ai/speech";
-    private final String VERSION = "20140501";
+    private final String VERSION = "20140923";
     private final String AUTHORIZATION_HEADER = "Authorization";
     private final String ACCEPT_HEADER = "Accept";
     private final String CONTENT_TYPE_HEADER = "Content-Type";

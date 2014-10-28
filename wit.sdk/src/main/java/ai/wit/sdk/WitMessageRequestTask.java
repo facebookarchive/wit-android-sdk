@@ -22,7 +22,7 @@ import java.net.URLEncoder;
 public class WitMessageRequestTask extends AsyncTask<String, String, String> {
 
     private final String WIT_URL = "https://api.wit.ai/message?q=";
-    private final String VERSION = "20140501";
+    private final String VERSION = "20140923";
     private final String AUTHORIZATION_HEADER = "Authorization";
     private final String ACCEPT_HEADER = "Accept";
     private final String BEARER_FORMAT = "Bearer %s";

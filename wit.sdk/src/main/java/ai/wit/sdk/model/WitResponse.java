@@ -3,6 +3,7 @@ package ai.wit.sdk.model;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 /**
  * Class that represent the Wit response from the server.
@@ -14,21 +15,15 @@ public class WitResponse implements Serializable {
     @SerializedName("msg_id")
     private String _msgId;
 
-    @SerializedName("outcome")
-    private WitOutcome _outcome;
+    @SerializedName("outcomes")
+    private ArrayList<WitOutcome> _outcomes;
 
-    @SerializedName("msg_body")
-    private String _body;
 
     public String getMsgId() {
         return _msgId;
     }
 
-    public WitOutcome getOutcome() {
-        return _outcome;
-    }
-
-    public String getBody() {
-        return _body;
+    public ArrayList<WitOutcome> getOutcomes() {
+        return _outcomes;
     }
 }

@@ -5,13 +5,16 @@ package ai.wit.sdk;
 
 import com.google.gson.JsonElement;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+
+import ai.wit.sdk.model.WitOutcome;
 
 /**
  * Created by Wit on 7/13/13.
  */
 public interface IWitListener {
-    void witDidGraspIntent(String intent, HashMap<String,JsonElement> entities, String body, double confidence, Error error);
+    void witDidGraspIntent(ArrayList<WitOutcome> outcomes,  Error error);
     void witDidStartListening();
     void witDidStopListening();
     void witActivityDetectorStarted();
