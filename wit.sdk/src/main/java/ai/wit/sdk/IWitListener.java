@@ -14,4 +14,5 @@ public interface IWitListener {
     void witDidGraspIntent(String intent, HashMap<String,JsonElement> entities, String body, double confidence, Error error);
     void witDidStartListening();
     void witDidStopListening();
+    void witActivityDetectorStarted();
 }

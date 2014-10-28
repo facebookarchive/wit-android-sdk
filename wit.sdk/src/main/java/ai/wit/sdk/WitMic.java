@@ -51,7 +51,8 @@ public class WitMic {
     public native void VadClean();
 
     public WitMic(IWitCoordinator witCoordinator, Wit.vadConfig vad) throws IOException {
-        in = new PipedInputStream();
+        int inputStreamSize = getPipedInputStreamSize();
+        in = new PipedInputStream(inputStreamSize);
         out = new PipedOutputStream();
         in.connect(out);
         _witCoordinator = witCoordinator;
@@ -125,6 +126,23 @@ public class WitMic {
         return bufferSize;
     }
 
+    /**
+     * AudioRecord will override its buffer as soon as it needs to write new data received from the
+     * microphone. So writing the data to the output stream should never block/wait.
+     * For that reason, we compute the size needed for the output stream to hold 20 seconds of data.
+     */
+    protected int getPipedInputStreamSize()
+    {
+        int nbChannel = 1;
+        int nbBits = 16;
+        int nbSeconds = 20;
+        int bufferSize;
+
+        bufferSize = SAMPLE_RATE * (nbBits / 2) * nbChannel * nbSeconds;
+
+        return bufferSize;
+    }
+
     public PipedInputStream getInputStream()
     {
         return in;
@@ -153,7 +171,7 @@ public class WitMic {
             int readBufferSize = iBufferSize;
             byte[] bytes = new byte[readBufferSize];
 
-            int maxPastBuffers = 3;
+            int maxPastBuffers = 5;
             byte[][] pastByteBuffers = new byte[maxPastBuffers][];
             byte[] sizedBuffer;
             short buffer[] = new short[readBufferSize];
@@ -186,11 +204,12 @@ public class WitMic {
                             _stopHandler.sendEmptyMessage(0);
                         }
                     }
+                    short2byte(buffer, nb, bytes);
                     if (_streamingStarted) {
-                        short2byte(buffer, nb, bytes);
                         iOut.write(bytes, 0, nb * 2);
                     } else {
                         sizedBuffer = Arrays.copyOf(bytes, nb * 2);
+                        Log.d("WIT", "Sized buffer length is: " + sizedBuffer.length);
                         pushPastBuffer(pastByteBuffers, sizedBuffer);
                         Log.d(getClass().getName(), "streaming did not start yet");
                     }
@@ -228,6 +247,7 @@ public class WitMic {
             int length = buffers.length;
 
              while ((--length) > 0) {
+
                  buffers[length] = buffers[length - 1];
              }
              buffers[0] = buffer;

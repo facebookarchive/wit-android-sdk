@@ -53,12 +53,13 @@ public class Wit implements IWitCoordinator {
     }
 
     public void startListening() throws IOException {
-        _witListener.witDidStartListening();
         _witMic = new WitMic(this, vad);
         _witMic.startRecording();
         _in = _witMic.getInputStream();
         if (vad != vadConfig.full) {
             voiceActivityStarted();
+        } else {
+            _witListener.witActivityDetectorStarted();
         }
     }
 
@@ -71,6 +72,7 @@ public class Wit implements IWitCoordinator {
     @Override
     public void voiceActivityStarted() {
         streamRawAudio(_in, "signed-integer", 16, WitMic.SAMPLE_RATE, ByteOrder.LITTLE_ENDIAN);
+        _witListener.witDidStartListening();
     }
 
     public void toggleListening() throws IOException {
