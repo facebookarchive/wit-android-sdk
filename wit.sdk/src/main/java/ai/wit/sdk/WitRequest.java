@@ -11,7 +11,7 @@ import com.google.gson.JsonObject;
 public class WitRequest {
     public static String scheme = "https";
     public static String authority = "api.wit.ai";
-    public static String version = "20140923";
+    public static String version = "20141022";
     private String _messageId = null;
     private IWitListener _witListener;
     private JsonObject _context;

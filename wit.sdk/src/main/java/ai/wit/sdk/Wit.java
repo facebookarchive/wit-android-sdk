@@ -5,6 +5,7 @@
 package ai.wit.sdk;
 
 
+import android.content.Context;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -34,7 +35,8 @@ public class Wit implements IWitCoordinator {
     private IWitListener _witListener;
     private WitMic _witMic;
     private PipedInputStream _in;
-    private JsonObject _context;
+    private JsonObject _context = new JsonObject();
+    private Context _androidContext;
 
     /**
      * Configure the voice activity detection algorithm:
@@ -60,6 +62,7 @@ public class Wit implements IWitCoordinator {
      * @throws IOException
      */
     public void startListening() throws IOException {
+        WitContextSetter witContextSetter = new WitContextSetter(_context, _androidContext);
         _witMic = new WitMic(this, vad);
         _witMic.startRecording();
         _in = _witMic.getInputStream();
@@ -131,8 +134,10 @@ public class Wit implements IWitCoordinator {
      * @param text text to extract the meaning from.
      */
     public void captureTextIntent(String text) {
+
         if (text == null)
             _witListener.witDidGraspIntent(null, null, new Error("Input Text null"));
+        WitContextSetter witContextSetter = new WitContextSetter(_context, _androidContext);
         WitMessageRequestTask request = new WitMessageRequestTask(_accessToken, _context, _witListener) {
             @Override
             protected void onPostExecute(String result) {
@@ -170,12 +175,29 @@ public class Wit implements IWitCoordinator {
     /**
      * Set the context for the next requests. Look at our http api documentation
      * to get more information about context (https://wit.ai/docs/http/20140923#context-link)
+     * The reference_time property is automatically set by the SDK (if null)
+     * The (GPS) location property is set by the SDK if it is enabled using the method
+     * enableContextLocation (if null)
+     *
      * @param context a JsonObject - here is an example of how to build it:
-     *                        JsonObject context = new JsonObject();
      *                        context.addProperty("timezone", "America/Los_Angeles");
-     *                        context.add("entities", OtherJsonObject);
+     *                        OtherJsonObject = new JsonObject();
+     *                        OtherJsonObject.addProperty("latitude", -35.23);
+     *                        OtherJsonObject.addProperty("longitude", 59.10);
+     *                        context.add("location", OtherJsonObject);
      */
     public void setContext(JsonObject context) {
         _context = context;
+    }
+
+    /**
+     * Enabling the context location will add the GPS coordinates to the _context object to all
+     * Wit requests (speech and text requests).
+     * This can help the Wit API to resolve some entities like the Location entity
+     * @param androidContext android.context.Context needed to call the
+     *                       android.location.LocationManager
+     */
+    public void enableContextLocation(Context androidContext) {
+        _androidContext = androidContext;
     }
 }
