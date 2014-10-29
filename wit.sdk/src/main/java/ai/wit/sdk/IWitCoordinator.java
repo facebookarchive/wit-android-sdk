@@ -5,4 +5,5 @@ package ai.wit.sdk;
  */
 public interface IWitCoordinator {
     public void stopListening();
+    public void voiceActivityStarted();
 }

@@ -3,8 +3,12 @@
  */
 package ai.wit.sdk;
 
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -21,16 +25,18 @@ import java.net.URLEncoder;
  */
 public class WitMessageRequestTask extends AsyncTask<String, String, String> {
 
-    private final String WIT_URL = "https://api.wit.ai/message?q=";
-    private final String VERSION = "20140501";
     private final String AUTHORIZATION_HEADER = "Authorization";
     private final String ACCEPT_HEADER = "Accept";
     private final String BEARER_FORMAT = "Bearer %s";
-    private final String ACCEPT_VERSION = "application/vnd.wit." + VERSION;
+    private final String ACCEPT_VERSION = "application/vnd.wit." + WitRequest.version;
     private String _accessToken;
+    private JsonObject _context;
+    private IWitListener _witListener;
 
-    public WitMessageRequestTask(String accessToken) {
+    public WitMessageRequestTask(String accessToken, JsonObject context, IWitListener witListener) {
         _accessToken = accessToken;
+        _context = context;
+        _witListener = witListener;
     }
 
     public static String convertStreamToString(InputStream is) throws Exception {
@@ -51,9 +57,16 @@ public class WitMessageRequestTask extends AsyncTask<String, String, String> {
     protected String doInBackground(String... text) {
         String response = null;
         try {
+            String message = text[0];
+            WitRequest witRequest = new WitRequest(_witListener, _context);
             Log.d("Wit", "Requesting ...." + text[0]);
-            final String getUrl = String.format("%s%s", WIT_URL, URLEncoder.encode(text[0], "utf-8"));
-            URL url = new URL(getUrl);
+            String urlStr = witRequest
+                    .buildUri("message")
+                    .appendQueryParameter("q", message)
+                    .build()
+                    .toString();
+            Log.d(getClass().getName(), "URL IS: " + urlStr);
+            URL url = new URL(urlStr);
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.addRequestProperty(AUTHORIZATION_HEADER, String.format(BEARER_FORMAT, _accessToken));
             urlConnection.addRequestProperty(ACCEPT_HEADER, ACCEPT_VERSION);

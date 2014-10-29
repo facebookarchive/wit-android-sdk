@@ -4,26 +4,15 @@
 
 package ai.wit.sdk;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
-import android.support.v4.app.Fragment;
+
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
 import com.google.gson.Gson;
-
+import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
 
 import ai.wit.sdk.model.WitResponse;
 
@@ -34,32 +23,72 @@ import ai.wit.sdk.model.WitResponse;
  */
 public class Wit implements IWitCoordinator {
 
+    public enum vadConfig {
+        disabled,
+        detectSpeechStop,
+        full
+    }
 
-    protected static final int RESULT_SPEECH = 1;
-    String _accessToken;
-    IWitListener _witListener;
-    WitMic _witMic;
-    public boolean detectSpeechStop = true;
+    private static final String TAG = "Wit";
+    private String _accessToken;
+    private IWitListener _witListener;
+    private WitMic _witMic;
+    private PipedInputStream _in;
+    private JsonObject _context;
 
+    /**
+     * Configure the voice activity detection algorithm:
+     * - Wit.vadConfig.disable
+     * - Wit.vadConfig.detectSpeechStop (default)
+     * - Wit.vadConfig.full
+     */
+    public vadConfig vad = vadConfig.detectSpeechStop;
+
+    /**
+     * Instantiating the Wit instance.
+     * @param accessToken the Wit access Token
+     * @param witListener The class implementing the IWitListener interface to receive callback from
+     *                    the wit SDK
+     */
     public Wit(String accessToken, IWitListener witListener) {
         _accessToken = accessToken;
         _witListener = witListener;
     }
 
+    /**
+     * Starts a new recording session. witDidGraspIntent() will be called once completed.
+     * @throws IOException
+     */
     public void startListening() throws IOException {
-        _witListener.witDidStartListening();
-        _witMic = new WitMic(this, detectSpeechStop);
+        _witMic = new WitMic(this, vad);
         _witMic.startRecording();
-        PipedInputStream in = _witMic.getInputStream();
-        streamRawAudio(in, "signed-integer", 16, WitMic.SAMPLE_RATE, ByteOrder.LITTLE_ENDIAN);
+        _in = _witMic.getInputStream();
+        if (vad != vadConfig.full) {
+            voiceActivityStarted();
+        } else {
+            _witListener.witActivityDetectorStarted();
+        }
     }
 
+    /**
+     * Stops the current recording if any, which will lead to a call to witDidGraspIntent().
+     */
     public void stopListening() {
 
         _witMic.stopRecording();
         _witListener.witDidStopListening();
     }
 
+    @Override
+    public void voiceActivityStarted() {
+        streamRawAudio(_in, "signed-integer", 16, WitMic.SAMPLE_RATE, ByteOrder.LITTLE_ENDIAN);
+        _witListener.witDidStartListening();
+    }
+
+    /**
+     * Start / stop the audio processing. Once the API response is received, witDidGraspIntent() method will be called.
+     * @throws IOException
+     */
     public void toggleListening() throws IOException {
         if (_witMic == null || !_witMic.isRecording()) {
             startListening();
@@ -70,21 +99,23 @@ public class Wit implements IWitCoordinator {
 
 
     /**
-     * Returns the meaning extracted from a Raw stream
-     * @param audio The audio stream to send over to WIT.AI
+     * Stream audio data from a InputStream to the Wit API.
+     * Once the API response is received, witDidGraspIntent() method will be called.
+     * @param audio The audio stream to send over to Wit.ai
      * @param encoding The encoding for this raw audio // Android usually uses 'signed-integer'
      * @param bits The bits of the audio // Android usually uses 16
      * @param rate The rate of the audio // Android usually uses 8000
      * @param order The byte order of the audio // Android usually uses LITTLE_ENDIAN
      */
-    public void streamRawAudio(InputStream audio, String encoding, int bits, int rate, ByteOrder order){
+    public void streamRawAudio(InputStream audio, String encoding, int bits, int rate, ByteOrder order) {
        if (audio == null ) {
-           _witListener.witDidGraspIntent(null, null, null, 0, new Error("InputStream null"));
+           _witListener.witDidGraspIntent(null, null, new Error("InputStream null"));
        }
        else {
+           Log.d(getClass().getName(), "streamRawAudio started.");
            String contentType = String.format("audio/raw;encoding=%s;bits=%s;rate=%s;endian=%s",
                    encoding, String.valueOf(bits), String.valueOf(rate), order == ByteOrder.LITTLE_ENDIAN ? "little" : "big");
-           WitSpeechRequestTask request = new WitSpeechRequestTask(_accessToken, contentType) {
+           WitSpeechRequestTask request = new WitSpeechRequestTask(_accessToken, contentType, _context, _witListener) {
                @Override
                protected void onPostExecute(String result) {
                    processWitResponse(result);
@@ -96,13 +127,13 @@ public class Wit implements IWitCoordinator {
     }
 
     /**
-     * Returns the meaning extracted from the text input
+     * Sends a String to wit.ai for interpretation. Same as sending a voice input, but with text.
      * @param text text to extract the meaning from.
      */
     public void captureTextIntent(String text) {
         if (text == null)
-            _witListener.witDidGraspIntent(null, null, null, 0, new Error("Input Text null"));
-        WitMessageRequestTask request = new WitMessageRequestTask(_accessToken) {
+            _witListener.witDidGraspIntent(null, null, new Error("Input Text null"));
+        WitMessageRequestTask request = new WitMessageRequestTask(_accessToken, _context, _witListener) {
             @Override
             protected void onPostExecute(String result) {
                 processWitResponse(result);
@@ -124,14 +155,27 @@ public class Wit implements IWitCoordinator {
             errorDuringRecognition = new Error(e.getMessage());
         }
         if (errorDuringRecognition != null) {
-            _witListener.witDidGraspIntent(null, null, null, 0, errorDuringRecognition);
+            _witListener.witDidGraspIntent(null, null, errorDuringRecognition);
         } else if (response == null) {
-            _witListener.witDidGraspIntent(null, null, null, 0, new Error("Response null"));
-        } else {
-            Log.d("Wit", "didGraspIntent Correctly " + response.getOutcome().get_intent());
-            _witListener.witDidGraspIntent(response.getOutcome().get_intent(),
-                    response.getOutcome().get_entities(),
-                    response.getBody(), response.getOutcome().get_confidence(), null);
+            _witListener.witDidGraspIntent(null, null, new Error("Response null"));
+        } else if (response.getOutcomes().size() == 0) {
+            _witListener.witDidGraspIntent(null, null, new Error("No outcome"));
         }
+        else {
+            Log.d(TAG, "Wit did grasp " + response.getOutcomes().size() +" outcome(s)");
+            _witListener.witDidGraspIntent(response.getOutcomes(), response.getMsgId(), null);
+        }
+    }
+
+    /**
+     * Set the context for the next requests. Look at our http api documentation
+     * to get more information about context (https://wit.ai/docs/http/20140923#context-link)
+     * @param context a JsonObject - here is an example of how to build it:
+     *                        JsonObject context = new JsonObject();
+     *                        context.addProperty("timezone", "America/Los_Angeles");
+     *                        context.add("entities", OtherJsonObject);
+     */
+    public void setContext(JsonObject context) {
+        _context = context;
     }
 }

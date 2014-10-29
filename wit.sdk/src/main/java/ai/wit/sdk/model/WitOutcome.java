@@ -17,6 +17,9 @@ public class WitOutcome {
     @SerializedName("entities")
     private HashMap<String, JsonElement> _entities;
 
+    @SerializedName("_text")
+    private String _text;
+
     @SerializedName("confidence")
     private double _confidence;
 
@@ -30,6 +33,10 @@ public class WitOutcome {
 
     public HashMap<String, JsonElement> get_entities() {
         return _entities;
+    }
+
+    public String get_text() {
+        return _text;
     }
 
     //  {

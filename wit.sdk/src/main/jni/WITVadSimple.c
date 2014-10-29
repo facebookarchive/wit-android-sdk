@@ -42,9 +42,9 @@ int wvs_still_talking(wvs_state *state, short int *samples, int nb_samples)
         }
         if (state->current_nb_samples == state->samples_per_frame) {
             result = wvs_check(state, state->samples, state->current_nb_samples);
-            if (result == 0) {
+            if (result == 0 || result == 1) {
                 free(dbfss);
-                return 0;
+                return result;
             }
             state->current_nb_samples = 0;
         }
@@ -53,7 +53,7 @@ int wvs_still_talking(wvs_state *state, short int *samples, int nb_samples)
     }
     free(dbfss);
     
-    return 1;
+    return -1;
 }
 
 static int wvs_check(wvs_state *state, double *samples, int nb_samples)

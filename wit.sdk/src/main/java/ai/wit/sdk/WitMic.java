@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.lang.Thread;
+import java.util.Arrays;
 
 
 /**
@@ -26,11 +27,17 @@ public class WitMic {
     private PipedInputStream in;
     private PipedOutputStream out;
     IWitCoordinator _witCoordinator;
-    protected boolean _detectSpeechStop;
+    protected Wit.vadConfig _vad;
 
-    Handler _handler = new Handler() {
+    Handler _stopHandler = new Handler() {
         public void handleMessage(Message msg) {
             _witCoordinator.stopListening();
+        }
+    };
+
+    Handler _streamingHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            _witCoordinator.voiceActivityStarted();
         }
     };
 
@@ -43,12 +50,13 @@ public class WitMic {
     public native int VadStillTalking(short[] arr, int length);
     public native void VadClean();
 
-    public WitMic(IWitCoordinator witCoordinator, boolean detectSpeechStop) throws IOException {
-        in = new PipedInputStream();
+    public WitMic(IWitCoordinator witCoordinator, Wit.vadConfig vad) throws IOException {
+        int inputStreamSize = getPipedInputStreamSize();
+        in = new PipedInputStream(inputStreamSize);
         out = new PipedOutputStream();
         in.connect(out);
         _witCoordinator = witCoordinator;
-        _detectSpeechStop = detectSpeechStop;
+        _vad = vad;
     }
 
     public void startRecording()
@@ -118,6 +126,23 @@ public class WitMic {
         return bufferSize;
     }
 
+    /**
+     * AudioRecord will override its buffer as soon as it needs to write new data received from the
+     * microphone. So writing the data to the output stream should never block/wait.
+     * For that reason, we compute the size needed for the output stream to hold 20 seconds of data.
+     */
+    protected int getPipedInputStreamSize()
+    {
+        int nbChannel = 1;
+        int nbBits = 16;
+        int nbSeconds = 20;
+        int bufferSize;
+
+        bufferSize = SAMPLE_RATE * (nbBits / 2) * nbChannel * nbSeconds;
+
+        return bufferSize;
+    }
+
     public PipedInputStream getInputStream()
     {
         return in;
@@ -128,11 +153,15 @@ public class WitMic {
         private PipedOutputStream iOut;
         private int iBufferSize;
         private WitMic _witMic;
+        private boolean _streamingStarted = false;
 
         public SamplesReaderThread(WitMic witMic, PipedOutputStream out, int bufferSize) {
             iOut = out;
             iBufferSize = bufferSize;
             _witMic = witMic;
+            if (_vad != Wit.vadConfig.full) {
+                _streamingStarted = true;
+            }
         }
 
         @Override
@@ -141,6 +170,10 @@ public class WitMic {
             int nb;
             int readBufferSize = iBufferSize;
             byte[] bytes = new byte[readBufferSize];
+
+            int maxPastBuffers = 5;
+            byte[][] pastByteBuffers = new byte[maxPastBuffers][];
+            byte[] sizedBuffer;
             short buffer[] = new short[readBufferSize];
             int vadResult;
             int skippingSamples = 0;
@@ -154,17 +187,32 @@ public class WitMic {
                     if (skippingSamples < SAMPLE_RATE) {
                         skippingSamples += nb;
                     }
-                    if (skippingSamples >= SAMPLE_RATE && _detectSpeechStop == true) {
+                    if (skippingSamples >= SAMPLE_RATE && _vad != Wit.vadConfig.disabled) {
                         vadResult = VadStillTalking(buffer, nb);
+
+                        if (_vad == Wit.vadConfig.full && vadResult == 1) {
+                            _streamingHandler.sendEmptyMessage(0);
+                            _streamingStarted = true;
+                            int nbStreamed = streamPastBuffers(pastByteBuffers);
+                            Log.d(getClass().getName(), "Just caugth "+ nbStreamed + " buffers");
+                        }
+
                         if (vadResult == 0) {
                             //Stop the microphone via a Handler so the stopListeing function
                             // of the IWitCoordinator interface is called on the Wit.startListening
                             //calling thread
-                            _handler.sendEmptyMessage(0);
+                            _stopHandler.sendEmptyMessage(0);
                         }
                     }
                     short2byte(buffer, nb, bytes);
-                    iOut.write(bytes, 0, nb * 2);
+                    if (_streamingStarted) {
+                        iOut.write(bytes, 0, nb * 2);
+                    } else {
+                        sizedBuffer = Arrays.copyOf(bytes, nb * 2);
+                        Log.d("WIT", "Sized buffer length is: " + sizedBuffer.length);
+                        pushPastBuffer(pastByteBuffers, sizedBuffer);
+                        Log.d(getClass().getName(), "streaming did not start yet");
+                    }
                 }
                 iOut.close();
             } catch (IOException e) {
@@ -181,5 +229,28 @@ public class WitMic {
             }
         }
 
+         protected int streamPastBuffers(byte[][] pastBuffers) throws IOException {
+             int length = pastBuffers.length;
+             int sentCounter = 0;
+
+             while ((length--) > 0) {
+                 if (pastBuffers[length] != null) {
+                     iOut.write(pastBuffers[length]);
+                     sentCounter++;
+                 }
+             }
+
+             return sentCounter;
+         }
+
+         protected void pushPastBuffer(byte[][] buffers, byte[] buffer) {
+            int length = buffers.length;
+
+             while ((--length) > 0) {
+
+                 buffers[length] = buffers[length - 1];
+             }
+             buffers[0] = buffer;
+         }
     }
 }

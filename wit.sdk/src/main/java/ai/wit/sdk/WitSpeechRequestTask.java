@@ -13,6 +13,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import android.net.Uri.Builder;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 /**
  * The request class.
@@ -21,20 +25,23 @@ import java.net.URL;
  */
 public class WitSpeechRequestTask extends AsyncTask<InputStream, String, String> {
 
-    private final String WIT_SPEECH_URL = "https://api.wit.ai/speech";
-    private final String VERSION = "20140501";
+
     private final String AUTHORIZATION_HEADER = "Authorization";
     private final String ACCEPT_HEADER = "Accept";
     private final String CONTENT_TYPE_HEADER = "Content-Type";
     private final String TRANSFER_ENCODING_HEADER = "Transfer-Encoding";
-    private final String ACCEPT_VERSION = "application/vnd.wit." + VERSION;
+    private final String ACCEPT_VERSION = "application/vnd.wit." + WitRequest.version;
     private final String BEARER_FORMAT = "Bearer %s";
     private String _accessToken;
     private String _contentType;
+    private JsonObject _context;
+    private IWitListener _witListener;
 
-    public WitSpeechRequestTask(String accessToken, String contentType) {
+    public WitSpeechRequestTask(String accessToken, String contentType, JsonObject context, IWitListener witListener) {
         _accessToken = accessToken;
         _contentType = contentType;
+        _context = context;
+        _witListener = witListener;
     }
 
     @Override
@@ -42,8 +49,13 @@ public class WitSpeechRequestTask extends AsyncTask<InputStream, String, String>
         String response = null;
         try {
             Log.d("Wit", "Requesting SPEECH ...." + _contentType);
-            URL url = new URL(WIT_SPEECH_URL);
-            Log.d("Wit", "Posting speech to " + WIT_SPEECH_URL);
+            WitRequest witRequest = new WitRequest(_witListener, _context);
+            String urlStr = witRequest
+                    .buildUri("speech")
+                    .build()
+                    .toString();
+            URL url = new URL(urlStr);
+            Log.d("Wit", "Posting speech to " + url.toString());
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setDoOutput(true);
             urlConnection.setRequestProperty(AUTHORIZATION_HEADER, String.format(BEARER_FORMAT, _accessToken));
@@ -75,10 +87,12 @@ public class WitSpeechRequestTask extends AsyncTask<InputStream, String, String>
                 urlConnection.disconnect();
             }
         } catch (Exception e) {
-            Log.e("Wit", "An error occurred during the request, did you set your token correctly? Is the content-type correct ?", e);
+            Log.d("Wit", "An error occurred during the request: " + e.getMessage());
         }
         return response;
     }
+
+
 
     @Override
     protected void onPostExecute(String result) {
