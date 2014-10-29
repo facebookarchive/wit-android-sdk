@@ -38,7 +38,7 @@ public class WitContextSetter {
     }
 
     protected void ensureLocation(JsonObject context) {
-        if (context.get(KEY_LOCATION) != null || _androidContext == null) {
+        if (_androidContext == null) {
             return ;
         }
         Location loc = getLocation();
