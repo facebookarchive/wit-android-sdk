@@ -29,9 +29,6 @@ public class WitContextSetter {
     }
 
     protected void ensureTime(JsonObject context) {
-        if (context.get(KEY_REFTIME) != null) {
-            return ;
-        }
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
         String nowAsISO8601 = df.format(new Date());
         context.addProperty(KEY_REFTIME, nowAsISO8601);
