@@ -30,19 +30,35 @@ public class Wit implements IWitCoordinator {
     }
 
     private static final String TAG = "Wit";
-    protected static final int RESULT_SPEECH = 1;
-    String _accessToken;
-    IWitListener _witListener;
-    WitMic _witMic;
-    public vadConfig vad = vadConfig.detectSpeechStop;
-    PipedInputStream _in;
+    private String _accessToken;
+    private IWitListener _witListener;
+    private WitMic _witMic;
+    private PipedInputStream _in;
     private JsonObject _context;
 
+    /**
+     * Configure the voice activity detection algorithm:
+     * - Wit.vadConfig.disable
+     * - Wit.vadConfig.detectSpeechStop (default)
+     * - Wit.vadConfig.full
+     */
+    public vadConfig vad = vadConfig.detectSpeechStop;
+
+    /**
+     * Instantiating the Wit instance.
+     * @param accessToken the Wit access Token
+     * @param witListener The class implementing the IWitListener interface to receive callback from
+     *                    the wit SDK
+     */
     public Wit(String accessToken, IWitListener witListener) {
         _accessToken = accessToken;
         _witListener = witListener;
     }
 
+    /**
+     * Starts a new recording session. witDidGraspIntent() will be called once completed.
+     * @throws IOException
+     */
     public void startListening() throws IOException {
         _witMic = new WitMic(this, vad);
         _witMic.startRecording();
@@ -54,6 +70,9 @@ public class Wit implements IWitCoordinator {
         }
     }
 
+    /**
+     * Stops the current recording if any, which will lead to a call to witDidGraspIntent().
+     */
     public void stopListening() {
 
         _witMic.stopRecording();
@@ -66,6 +85,10 @@ public class Wit implements IWitCoordinator {
         _witListener.witDidStartListening();
     }
 
+    /**
+     * Start / stop the audio processing. Once the API response is received, witDidGraspIntent() method will be called.
+     * @throws IOException
+     */
     public void toggleListening() throws IOException {
         if (_witMic == null || !_witMic.isRecording()) {
             startListening();
@@ -76,14 +99,15 @@ public class Wit implements IWitCoordinator {
 
 
     /**
-     * Returns the meaning extracted from a Raw stream
-     * @param audio The audio stream to send over to WIT.AI
+     * Stream audio data from a InputStream to the Wit API.
+     * Once the API response is received, witDidGraspIntent() method will be called.
+     * @param audio The audio stream to send over to Wit.ai
      * @param encoding The encoding for this raw audio // Android usually uses 'signed-integer'
      * @param bits The bits of the audio // Android usually uses 16
      * @param rate The rate of the audio // Android usually uses 8000
      * @param order The byte order of the audio // Android usually uses LITTLE_ENDIAN
      */
-    public void streamRawAudio(InputStream audio, String encoding, int bits, int rate, ByteOrder order){
+    public void streamRawAudio(InputStream audio, String encoding, int bits, int rate, ByteOrder order) {
        if (audio == null ) {
            _witListener.witDidGraspIntent(null, null, new Error("InputStream null"));
        }
@@ -103,7 +127,7 @@ public class Wit implements IWitCoordinator {
     }
 
     /**
-     * Returns the meaning extracted from the text input
+     * Sends a String to wit.ai for interpretation. Same as sending a voice input, but with text.
      * @param text text to extract the meaning from.
      */
     public void captureTextIntent(String text) {
@@ -143,7 +167,15 @@ public class Wit implements IWitCoordinator {
         }
     }
 
-    public void setContext(JsonObject jo) {
-        _context = jo;
+    /**
+     * Set the context for the next requests. Look at our http api documentation
+     * to get more information about context (https://wit.ai/docs/http/20140923#context-link)
+     * @param context a JsonObject - here is an example of how to build it:
+     *                        JsonObject context = new JsonObject();
+     *                        context.addProperty("timezone", "America/Los_Angeles");
+     *                        context.add("entities", OtherJsonObject);
+     */
+    public void setContext(JsonObject context) {
+        _context = context;
     }
 }
