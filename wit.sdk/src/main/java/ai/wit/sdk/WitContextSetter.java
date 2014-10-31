@@ -39,6 +39,9 @@ public class WitContextSetter {
             return ;
         }
         Location loc = getLocation();
+        if (loc == null) {
+            return ;
+        }
         JsonObject jsonLocation = new JsonObject();
         jsonLocation.addProperty("latitude", loc.getLatitude());
         jsonLocation.addProperty("longitude", loc.getLongitude());
@@ -54,6 +57,9 @@ public class WitContextSetter {
         Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.ACCURACY_COARSE);
         String locationProvider = lm.getBestProvider(criteria, true);
+        if (locationProvider == null) {
+            return null;
+        }
         Location loc = lm.getLastKnownLocation(locationProvider);
 
         return loc;
