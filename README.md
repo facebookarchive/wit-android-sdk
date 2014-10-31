@@ -1,4 +1,4 @@
-Wit-Android 3.1.0
+Wit-Android 3.1.1
 ===========
 
 The Wit.ai Android SDK is a the easiest way to integrate Wit.ai features into your Android application.
