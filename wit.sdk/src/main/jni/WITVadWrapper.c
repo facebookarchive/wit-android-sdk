@@ -1,16 +1,17 @@
 
-#include "WITVadSimple.h"
+#include "WITCvad.h"
 #include <jni.h>
 
 
-static wvs_state* wit_vad_g_struct = 0;
+static s_wv_cvad_detector_state* wit_vad_g_struct = 0;
 
 int Java_ai_wit_sdk_WitMic_VadInit()
 {
     double th = 8.0;
     int sample_rate = 16000;
+    int speech_timeout = 8000; //timeout in ms
 
-    wit_vad_g_struct = wvs_init(th, sample_rate);
+    wit_vad_g_struct = wv_detector_cvad_init(sample_rate, 0, speech_timeout);
 
     return 0;
 }
@@ -30,7 +31,7 @@ int Java_ai_wit_sdk_WitMic_VadStillTalking(JNIEnv *env, jobject obj, jshortArray
   }
   (*env)->ReleaseShortArrayElements(env, java_arr, native_arr, 0);
 
-  result = wvs_still_talking(wit_vad_g_struct, samples, arr_len);
+  result = wvs_cvad_detect_talking(wit_vad_g_struct, samples, arr_len);
   free(samples);
 
   return result;
@@ -39,7 +40,7 @@ int Java_ai_wit_sdk_WitMic_VadStillTalking(JNIEnv *env, jobject obj, jshortArray
 void Java_ai_wit_sdk_WitMic_VadClean()
 {
     if (wit_vad_g_struct) {
-        wvs_clean(wit_vad_g_struct);
+        wv_detector_cvad_clean(wit_vad_g_struct);
         wit_vad_g_struct = 0;
     }
 }
