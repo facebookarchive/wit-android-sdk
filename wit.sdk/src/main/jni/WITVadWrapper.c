@@ -3,7 +3,7 @@
 #include <jni.h>
 
 
-static s_wv_cvad_detector_state* wit_vad_g_struct = 0;
+static s_wv_detector_cvad_state* wit_vad_g_struct = 0;
 
 int Java_ai_wit_sdk_WitMic_VadInit()
 {
