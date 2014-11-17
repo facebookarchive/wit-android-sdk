@@ -16,7 +16,7 @@
 #include <string.h>
 
 #define FIXED_POINT 16 //sets fft for fixed point data
-#include "kiss_fftr.h"
+#include "fft/kiss_fftr.h"
 
 /*
  * This speech algorithm looks at multiple auditory compenents related to speech:
@@ -101,7 +101,7 @@ int wvs_cvad_detect_talking(s_wv_detector_cvad_state *cvad_state, short int *sam
 /*
  Initiate the cvad_state structure, which represents the state of
  one instance of the algorithm
- 
+
  sensitive mode: 0 if for a close-up mic, 1 if for a fixed, distant mic
  */
 s_wv_detector_cvad_state* wv_detector_cvad_init(int sample_rate, int sensitive_mode, int speech_timeout);
