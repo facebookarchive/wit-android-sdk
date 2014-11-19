@@ -16,7 +16,7 @@
 #include <string.h>
 
 #define FIXED_POINT 16 //sets fft for fixed point data
-#include "fft/kiss_fftr.h"
+#include "kiss_fftr.h"
 
 /*
  * This speech algorithm looks at multiple auditory compenents related to speech:
@@ -29,28 +29,28 @@
  * The end of speech is determined by most features of speech disappearing for an extended period of time (~1 sec)
  */
 
-#define DETECTOR_CVAD_FRAME_SIZE 10  /* milliseconds */
-#define DETECTOR_CVAD_FRAMES_INIT 60 /* number of frames to use to initialize the minimum values */
+#define DETECTOR_CVAD_FRAMES_INIT 120 /* number of frames to use to initialize values */
 #define DETECTOR_CVAD_E_TH_COEFF_LOW_BAND 2.5f     /* Energy threshold coefficient */
 #define DETECTOR_CVAD_E_TH_COEFF_UPPER_BANDS 2.0f     /* Energy threshold coefficient */
 #define DETECTOR_CVAD_SFM_TH 3.0f   /* Spectral Flatness Measure threshold */
 #define DETECTOR_CVAD_DFC_TH 250.0f   /* most Dominant Frequency Component threshold */
 #define DETECTOR_CVAD_MIN_ZERO_CROSSINGS 5   /* fewest zero crossings for speech */
 #define DETECTOR_CVAD_MAX_ZERO_CROSSINGS 15  /* maximum zero crossings for speech */
-#define DETECTOR_CVAD_RESULT_MEMORY 100 /* number of frame results to keep in memory */
+#define DETECTOR_CVAD_RESULT_MEMORY 130 /* number of frame results to keep in memory */
 #define DETECTOR_CVAD_ENERGY_MEMORY 20 /* number of frame results to keep in memory */
 #define DETECTOR_CVAD_N_ENERGY_BANDS 5 /* number of 1 KHz energy bands to compute */
+#define DETECTOR_CVAD_MINIMUM_LENGTH 1000 /* minimum length of vad in ms */
 
 //final speech detection variables
-#define DETECTOR_CVAD_N_FRAMES_CHECK_START 15
-#define DETECTOR_CVAD_COUNT_SUM_START 85
-#define DETECTOR_CVAD_COUNT_SUM_START_SENSITIVE 60
-#define DETECTOR_CVAD_N_FRAMES_CHECK_END_SHORT 20
-#define DETECTOR_CVAD_COUNT_END_SHORT_FACTOR 0.8
-#define DETECTOR_CVAD_COUNT_END_SHORT_FACTOR_SENSITIVE 0.8
-#define DETECTOR_CVAD_N_FRAMES_CHECK_END_LONG 100
-#define DETECTOR_CVAD_COUNT_END_LONG_FACTOR 3
-#define DETECTOR_CVAD_COUNT_END_LONG_FACTOR_SENSITIVE 3
+#define DETECTOR_CVAD_N_FRAMES_CHECK_START 20
+#define DETECTOR_CVAD_COUNT_SUM_START 90
+#define DETECTOR_CVAD_COUNT_SUM_START_SENSITIVE 75
+#define DETECTOR_CVAD_N_FRAMES_CHECK_END_SHORT 30
+#define DETECTOR_CVAD_COUNT_END_SHORT_FACTOR 0.5
+#define DETECTOR_CVAD_COUNT_END_SHORT_FACTOR_SENSITIVE 0.3
+#define DETECTOR_CVAD_N_FRAMES_CHECK_END_LONG 130
+#define DETECTOR_CVAD_COUNT_END_LONG_FACTOR 1.8
+#define DETECTOR_CVAD_COUNT_END_LONG_FACTOR_SENSITIVE 1.5
 
 typedef struct {
     double energy_thresh_coeff_lower;
@@ -95,13 +95,13 @@ typedef struct {
  Main entry point to the detection algorithm.
  This returns a -1 if there is no change in state, a 1 if some started talking, and a 0 if speech ended
  */
-int wvs_cvad_detect_talking(s_wv_detector_cvad_state *cvad_state, short int *samples, int nb_samples);
+int wvs_cvad_detect_talking(s_wv_detector_cvad_state *cvad_state, short int *samples, float *fft_mags);
 
 
 /*
  Initiate the cvad_state structure, which represents the state of
  one instance of the algorithm
-
+ 
  sensitive mode: 0 if for a close-up mic, 1 if for a fixed, distant mic
  */
 s_wv_detector_cvad_state* wv_detector_cvad_init(int sample_rate, int sensitive_mode, int speech_timeout);
@@ -146,26 +146,26 @@ short int vw_detector_cvad_check_frame(s_wv_detector_cvad_state *cvad_state, dou
  Compute the fourier transoformation of a frame
  */
 //kiss_fft_cpx *frames_detector_cvad_fft(short int *samples, int nb);
-void frames_detector_cvad_fft(short int *samples, kiss_fft_cpx* results, int nb);
+//void frames_detector_cvad_fft(short int *samples, kiss_fft_cpx* results, int nb);
 
 /*
  Return the frequency with the biggest amplitude (from a frame).
  */
-double frames_detector_cvad_most_dominant_freq(s_wv_detector_cvad_state *cvad_state, kiss_fft_cpx *modules, int nb_modules, double nb_samples);
+double frames_detector_cvad_most_dominant_freq(s_wv_detector_cvad_state *cvad_state, float *fft_mags, int nb_modules, double nb_samples);
 
 
 /*
  Computes the energy of the first DETECTOR_CVAD_N_ENERGY_BANDS 1 KHz bands
  */
 //double* frames_detector_cvad_multiband_energy(s_wv_detector_cvad_state *cvad_state, kiss_fft_cpx *fft_modules, int nb_modules, int nb_samples);
-void frames_detector_cvad_multiband_energy(s_wv_detector_cvad_state *cvad_state, kiss_fft_cpx *fft_modules, int nb_modules, double *band_energy, int nb_samples);
+void frames_detector_cvad_multiband_energy(s_wv_detector_cvad_state *cvad_state, float *fft_mags, int nb_modules, double *band_energy, int nb_samples);
 
 /*
  Compute the spectral flatness of a frame.
  It tells us if all the frequencies have a similar amplitude, which would means noise
  or if there is some dominant frequencies, which could mean voice.
  */
-double frames_detector_cvad_spectral_flatness(kiss_fft_cpx *modules, int nb);
+double frames_detector_cvad_spectral_flatness(float *fft_mags, int nb);
 
 /*
  Take the output of the fourier transform and return the absolute value.
