@@ -30,9 +30,10 @@ public class Wit implements IWitCoordinator {
         full
     }
 
-    public enum vadTuning {
-        standard,
-        ambient
+    //the order of this enum matters since it is converted to an int via .ordinal() later
+    public enum VadTuning {
+        standard, //0
+        ambient   //1
     }
 
     private static final String TAG = "Wit";
@@ -56,7 +57,7 @@ public class Wit implements IWitCoordinator {
      * - Wit.vadConfig.standard (For use when the speaker is near the mic. Default.)
      * - Wit.vadConfig.ambient (For use with a fixed mic in an open setting. E.g. home automation)
      */
-    public vadTuning vadTuning = vadTuning.standard;
+    public VadTuning vadTuning = VadTuning.standard;
 
     /**
      * Set maximum message time in ms
@@ -81,7 +82,7 @@ public class Wit implements IWitCoordinator {
      */
     public void startListening() throws IOException {
         WitContextSetter witContextSetter = new WitContextSetter(_context, _androidContext);
-        _witMic = new WitMic(this, vad);
+        _witMic = new WitMic(this, vad, vadTuning, vadTimeout);
         _witMic.startRecording();
         _in = _witMic.getInputStream();
         if (vad != vadConfig.full) {
