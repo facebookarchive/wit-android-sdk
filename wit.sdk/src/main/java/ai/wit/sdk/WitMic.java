@@ -31,6 +31,7 @@ public class WitMic {
     protected Wit.vadConfig _vad;
     protected Wit.VadTuning _vadTuning;
     protected int _vadTimeout;
+    protected boolean _stoppedByVad = false;
 
     Handler _stopHandler = new Handler() {
         public void handleMessage(Message msg) {
@@ -87,6 +88,9 @@ public class WitMic {
             aRecorder.stop();
             aRecorder.release();
             _isRecording = false;
+            if (_vad != Wit.vadConfig.disabled && !_stoppedByVad){
+                //Oh no! The user had to manually end speech
+            }
         }
     }
 
@@ -191,6 +195,8 @@ public class WitMic {
             float[] fft_mags = new float[GetVadSamplesPerFrame()/2];
             float[] fft_modules = new float[GetVadSamplesPerFrame()];
             short[] samples;
+
+            _stoppedByVad = false;
             try {
                 while ((nb = aRecorder.read(buffer, 0, readBufferSize)) > 0) {
 
@@ -226,6 +232,7 @@ public class WitMic {
                                 //Stop the microphone via a Handler so the stopListeing function
                                 // of the IWitCoordinator interface is called on the Wit.startListening
                                 //calling thread
+                                _stoppedByVad = true;
                                 _stopHandler.sendEmptyMessage(0);
                             }
                             samplesAnalyzed+=GetVadSamplesPerFrame();
