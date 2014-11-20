@@ -20,6 +20,7 @@ repositories {
 dependencies {
     compile('com.google.code.gson:gson:2.2.4')
     compile('org.apache.directory.studio:org.apache.commons.io:2.4')
+    compile('com.github.wendykierp:JTransforms:3.0')
     compile('com.android.support:appcompat-v7:19.1.0')
 }
 
