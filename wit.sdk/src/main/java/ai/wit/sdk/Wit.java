@@ -188,6 +188,11 @@ public class Wit implements IWitCoordinator {
         else {
             Log.d(TAG, "Wit did grasp " + response.getOutcomes().size() +" outcome(s)");
             _witListener.witDidGraspIntent(response.getOutcomes(), response.getMsgId(), null);
+            if(!_witMic.lastStoppedByVad){
+               WitMessageVadFail failMessage = new WitMessageVadFail(_accessToken,response.getMsgId(),vadTuning,"android-3.2.0",_witListener);
+               failMessage.execute();
+
+            }
         }
     }
 
