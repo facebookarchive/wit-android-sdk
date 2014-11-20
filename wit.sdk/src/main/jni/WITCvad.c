@@ -7,7 +7,6 @@
 //
 
 #include "WITCvad.h"
-#include <android/log.h>
 
 int wvs_cvad_detect_talking(s_wv_detector_cvad_state *cvad_state, short int *samples, float *fft_mags)
 {
@@ -232,10 +231,8 @@ short int vw_detector_cvad_check_frame(s_wv_detector_cvad_state *cvad_state, dou
         counter += 2;
     }
 
-    __android_log_print(ANDROID_LOG_VERBOSE, "CVAD", "band[0]:%g/%g",band_energy[0],cvad_state->th_energy[0]);
     int b;
     for(b=1; b<DETECTOR_CVAD_N_ENERGY_BANDS; b++){
-        __android_log_print(ANDROID_LOG_VERBOSE, "CVAD", "band[%d]:%g/%g",b,band_energy[b],cvad_state->th_energy[b]);
         if(band_energy[b] > cvad_state->th_energy[b]){
             band_counter++;
         }
