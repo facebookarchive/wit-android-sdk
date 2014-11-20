@@ -46,7 +46,7 @@ public class Wit implements IWitCoordinator {
 
     /**
      * Configure the voice activity detection algorithm:
-     * - Wit.vadConfig.disable
+     * - Wit.vadConfig.disabled
      * - Wit.vadConfig.detectSpeechStop (default)
      * - Wit.vadConfig.full
      */
