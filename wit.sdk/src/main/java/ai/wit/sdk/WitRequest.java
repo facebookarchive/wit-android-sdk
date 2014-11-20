@@ -43,7 +43,7 @@ public class WitRequest {
         String messageId = _witListener.witGenerateMessageId();
 
         uriBuilder = this.getBase();
-        uriBuilder.appendPath(endpoint);
+        uriBuilder.appendEncodedPath(endpoint);
         if (_context != null) {
             Gson gson = new Gson();
             String jsonContext = gson.toJson(_context);
