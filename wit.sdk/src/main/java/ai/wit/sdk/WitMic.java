@@ -184,7 +184,8 @@ public class WitMic {
             VadInit();
 
             FloatFFT_1D fft = new FloatFFT_1D(GetVadSamplesPerFrame());
-            float[] fft_mags = new float[GetVadSamplesPerFrame()];
+            float[] fft_mags = new float[GetVadSamplesPerFrame()/2];
+            float[] fft_modules = new float[GetVadSamplesPerFrame()];
             short[] samples;
             try {
                 while ((nb = aRecorder.read(buffer, 0, readBufferSize)) > 0) {
@@ -197,9 +198,14 @@ public class WitMic {
                         while(samplesAnalyzed + GetVadSamplesPerFrame() < nb){
                             samples = Arrays.copyOfRange(buffer, samplesAnalyzed, samplesAnalyzed +GetVadSamplesPerFrame());
                             for(int i=0; i<GetVadSamplesPerFrame(); i++){
-                                fft_mags[i] = (float)samples[i];
+                                fft_modules[i] = (float)samples[i];
                             }
-                            fft.realForward(fft_mags); //results are stored in place
+                            fft.realForward(fft_modules); //results are stored in place
+
+                            //transform to magnitudes
+                            for(int i=0; i<GetVadSamplesPerFrame()/2; i++){
+                                fft_mags[i]=(float)Math.sqrt(Math.pow(fft_modules[2*i],2)+Math.pow(fft_modules[2*i+1],2));
+                            }
 
                             vadResult = VadStillTalking(buffer, fft_mags);
 
