@@ -30,6 +30,11 @@ public class Wit implements IWitCoordinator {
         full
     }
 
+    public enum vadTuning {
+        standard,
+        ambient
+    }
+
     private static final String TAG = "Wit";
     private String _accessToken;
     private IWitListener _witListener;
@@ -45,6 +50,19 @@ public class Wit implements IWitCoordinator {
      * - Wit.vadConfig.full
      */
     public vadConfig vad = vadConfig.detectSpeechStop;
+
+    /**
+     * Configure the voice activity detection algorithm:
+     * - Wit.vadConfig.standard (For use when the speaker is near the mic. Default.)
+     * - Wit.vadConfig.ambient (For use with a fixed mic in an open setting. E.g. home automation)
+     */
+    public vadTuning vadTuning = vadTuning.standard;
+
+    /**
+     * Set maximum message time in ms
+     * Defaults to 7000
+     */
+    public int vadTimeout = 7000;
 
     /**
      * Instantiating the Wit instance.
