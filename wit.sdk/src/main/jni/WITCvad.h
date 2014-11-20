@@ -15,9 +15,6 @@
 #include <math.h>
 #include <string.h>
 
-#define FIXED_POINT 16 //sets fft for fixed point data
-#include "kiss_fftr.h"
-
 /*
  * This speech algorithm looks at multiple auditory compenents related to speech:
  *  - Energy divided into 1 KHz bands
@@ -101,7 +98,7 @@ int wvs_cvad_detect_talking(s_wv_detector_cvad_state *cvad_state, short int *sam
 /*
  Initiate the cvad_state structure, which represents the state of
  one instance of the algorithm
- 
+
  sensitive mode: 0 if for a close-up mic, 1 if for a fixed, distant mic
  */
 s_wv_detector_cvad_state* wv_detector_cvad_init(int sample_rate, int sensitive_mode, int speech_timeout);
@@ -143,12 +140,6 @@ void wv_detector_cvad_modify_update_coeffs(s_wv_detector_cvad_state *cvad_state)
 short int vw_detector_cvad_check_frame(s_wv_detector_cvad_state *cvad_state, double *band_energy, double dfc, double sfm, int zero_crossings);
 
 /*
- Compute the fourier transoformation of a frame
- */
-//kiss_fft_cpx *frames_detector_cvad_fft(short int *samples, int nb);
-//void frames_detector_cvad_fft(short int *samples, kiss_fft_cpx* results, int nb);
-
-/*
  Return the frequency with the biggest amplitude (from a frame).
  */
 double frames_detector_cvad_most_dominant_freq(s_wv_detector_cvad_state *cvad_state, float *fft_mags, int nb_modules, double nb_samples);
@@ -157,7 +148,6 @@ double frames_detector_cvad_most_dominant_freq(s_wv_detector_cvad_state *cvad_st
 /*
  Computes the energy of the first DETECTOR_CVAD_N_ENERGY_BANDS 1 KHz bands
  */
-//double* frames_detector_cvad_multiband_energy(s_wv_detector_cvad_state *cvad_state, kiss_fft_cpx *fft_modules, int nb_modules, int nb_samples);
 void frames_detector_cvad_multiband_energy(s_wv_detector_cvad_state *cvad_state, float *fft_mags, int nb_modules, double *band_energy, int nb_samples);
 
 /*
@@ -166,13 +156,6 @@ void frames_detector_cvad_multiband_energy(s_wv_detector_cvad_state *cvad_state,
  or if there is some dominant frequencies, which could mean voice.
  */
 double frames_detector_cvad_spectral_flatness(float *fft_mags, int nb);
-
-/*
- Take the output of the fourier transform and return the absolute value.
- module[0] contains the real part of the fourier transform result and module[1] contains the imaginary representation of the number.
- (module[0]^2 + module[1]^2)^1/2 is equal to the amplitude of the frequency.
- */
-double frames_detector_cvad_c2r(kiss_fft_cpx module);
 
 /*
  Counts the number of times the signal crosses zero
