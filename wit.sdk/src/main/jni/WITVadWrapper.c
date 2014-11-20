@@ -5,13 +5,10 @@
 
 static s_wv_detector_cvad_state* wit_vad_g_struct = 0;
 
-int Java_ai_wit_sdk_WitMic_VadInit()
+int Java_ai_wit_sdk_WitMic_VadInit(JNIEnv *env, jobject obj, jint vadTuning, jint vadTimeout)
 {
-    double th = 8.0;
     int sample_rate = 16000;
-    int speech_timeout = 8000; //timeout in ms
-
-    wit_vad_g_struct = wv_detector_cvad_init(sample_rate, 1, speech_timeout);
+    wit_vad_g_struct = wv_detector_cvad_init(sample_rate, (int)vadTuning, (int)vadTimeout);
 
     return 0;
 }
