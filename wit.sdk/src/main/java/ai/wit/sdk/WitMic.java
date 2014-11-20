@@ -203,7 +203,9 @@ public class WitMic {
                             fft.realForward(fft_modules); //results are stored in place
 
                             //transform to magnitudes
-                            for(int i=0; i<GetVadSamplesPerFrame()/2; i++){
+                            fft_mags[0]=fft_modules[0];
+                            //the 0th (DC) component is different and has no imaginary part
+                            for(int i=1; i<GetVadSamplesPerFrame()/2; i++){
                                 fft_mags[i]=(float)Math.sqrt(Math.pow(fft_modules[2*i],2)+Math.pow(fft_modules[2*i+1],2));
                             }
 
