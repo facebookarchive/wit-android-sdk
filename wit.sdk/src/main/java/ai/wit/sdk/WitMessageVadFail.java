@@ -68,7 +68,7 @@ public class WitMessageVadFail extends AsyncTask<String, String, String> {
                     .buildUri("speech/vad")
                     .appendQueryParameter("message-id", _messageID)
                     .appendQueryParameter("tuning", ""+_vadTuning)
-                    .appendQueryParameter("sdkVer", _sdkVer)
+                    .appendQueryParameter("sdk-ver", _sdkVer)
                     .build()
                     .toString();
             Log.d(getClass().getName(), "URL IS: " + urlStr);
