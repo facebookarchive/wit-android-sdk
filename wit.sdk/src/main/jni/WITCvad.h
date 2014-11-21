@@ -40,13 +40,13 @@
 
 //final speech detection variables
 #define DETECTOR_CVAD_N_FRAMES_CHECK_START 20
-#define DETECTOR_CVAD_COUNT_SUM_START 90
+#define DETECTOR_CVAD_COUNT_SUM_START 100
 #define DETECTOR_CVAD_COUNT_SUM_START_SENSITIVE 75
 #define DETECTOR_CVAD_N_FRAMES_CHECK_END_SHORT 30
-#define DETECTOR_CVAD_COUNT_END_SHORT_FACTOR 0.5
+#define DETECTOR_CVAD_COUNT_END_SHORT_FACTOR 0.6
 #define DETECTOR_CVAD_COUNT_END_SHORT_FACTOR_SENSITIVE 0.3
 #define DETECTOR_CVAD_N_FRAMES_CHECK_END_LONG 130
-#define DETECTOR_CVAD_COUNT_END_LONG_FACTOR 1.8
+#define DETECTOR_CVAD_COUNT_END_LONG_FACTOR 1.9
 #define DETECTOR_CVAD_COUNT_END_LONG_FACTOR_SENSITIVE 1.5
 
 typedef struct {
@@ -101,7 +101,7 @@ int wvs_cvad_detect_talking(s_wv_detector_cvad_state *cvad_state, short int *sam
 
  sensitive mode: 0 if for a close-up mic, 1 if for a fixed, distant mic
  */
-s_wv_detector_cvad_state* wv_detector_cvad_init(int sample_rate, int sensitive_mode, int speech_timeout);
+s_wv_detector_cvad_state* wv_detector_cvad_init(int sample_rate, int sensitivity, int speech_timeout);
 
 /*
  Safely frees memory for a cvad_state
@@ -113,7 +113,7 @@ void wv_detector_cvad_clean(s_wv_detector_cvad_state *cvad_state);
  0 for highly discriminating (like a mic on a phone)
  1 for high voice sensitivity (like a fixed mic in a home)
  */
-void wv_detector_cvad_set_detection_mode(s_wv_detector_cvad_state *cvad_state, int sensitive_mode);
+void wv_detector_cvad_set_sensitivity(s_wv_detector_cvad_state *cvad_state, int sensitivity);
 
 /*
  Set the reference values of the energy, most dominant frequency componant and the spectral flatness measure.
