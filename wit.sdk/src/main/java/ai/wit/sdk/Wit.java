@@ -30,12 +30,6 @@ public class Wit implements IWitCoordinator {
         full
     }
 
-    //the order of this enum matters since it is converted to an int via .ordinal() later
-    public enum VadTuning {
-        standard, //0
-        ambient   //1
-    }
-
     private static final String TAG = "Wit";
     private String _accessToken;
     private IWitListener _witListener;
@@ -53,11 +47,12 @@ public class Wit implements IWitCoordinator {
     public vadConfig vad = vadConfig.detectSpeechStop;
 
     /**
-     * Configure the voice activity detection algorithm:
-     * - Wit.vadConfig.standard (For use when the speaker is near the mic. Default.)
-     * - Wit.vadConfig.ambient (For use with a fixed mic in an open setting. E.g. home automation)
-     */
-    public VadTuning vadTuning = VadTuning.standard;
+     * Set VAD sensitivity (0-100):
+     * - Lower values are for strong voice signals like for a cellphone or personal mic.
+     * - Higher values are for use with a fixed-position mic or any application with voice buried in ambient noise.
+     * - Defaults to 0
+ */
+    public int vadSensitivity = 0;
 
     /**
      * Set maximum message time in ms
@@ -82,7 +77,7 @@ public class Wit implements IWitCoordinator {
      */
     public void startListening() throws IOException {
         WitContextSetter witContextSetter = new WitContextSetter(_context, _androidContext);
-        _witMic = new WitMic(this, vad, vadTuning, vadTimeout);
+        _witMic = new WitMic(this, vad, vadSensitivity, vadTimeout);
         _witMic.startRecording();
         _in = _witMic.getInputStream();
         if (vad != vadConfig.full) {
@@ -189,7 +184,7 @@ public class Wit implements IWitCoordinator {
             Log.d(TAG, "Wit did grasp " + response.getOutcomes().size() +" outcome(s)");
             _witListener.witDidGraspIntent(response.getOutcomes(), response.getMsgId(), null);
             if(!_witMic.lastStoppedByVad){
-               WitMessageVadFail failMessage = new WitMessageVadFail(_accessToken,response.getMsgId(),vadTuning,"android-3.2.0",_witListener);
+               WitMessageVadFail failMessage = new WitMessageVadFail(_accessToken,response.getMsgId(),vadSensitivity,"android-3.2.0",_witListener);
                failMessage.execute();
 
             }

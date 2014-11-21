@@ -34,12 +34,12 @@ public class WitMessageVadFail extends AsyncTask<String, String, String> {
     private IWitListener _witListener;
     private String _sdkVer;
     private String _messageID;
-    private int _vadTuning;
+    private int _vadSensitivity;
 
-    public WitMessageVadFail(String accessToken, String messageID, Wit.VadTuning vadTuning, String sdkVer, IWitListener witListener) {
+    public WitMessageVadFail(String accessToken, String messageID, int vadSensitivity, String sdkVer, IWitListener witListener) {
         _accessToken = accessToken;
         _witListener = witListener;
-        _vadTuning = vadTuning.ordinal();
+        _vadSensitivity = vadSensitivity;
         _messageID = messageID;
         _sdkVer = sdkVer;
     }
@@ -67,7 +67,7 @@ public class WitMessageVadFail extends AsyncTask<String, String, String> {
             String urlStr = witRequest
                     .buildUri("speech/vad")
                     .appendQueryParameter("message-id", _messageID)
-                    .appendQueryParameter("tuning", ""+_vadTuning)
+                    .appendQueryParameter("sensitivity", ""+_vadSensitivity)
                     .appendQueryParameter("sdk-ver", _sdkVer)
                     .build()
                     .toString();

@@ -29,7 +29,7 @@ public class WitMic {
     private PipedOutputStream out;
     IWitCoordinator _witCoordinator;
     protected Wit.vadConfig _vad;
-    protected Wit.VadTuning _vadTuning;
+    protected int _vadSensitivity;
     protected int _vadTimeout;
     protected boolean _currentStoppedByVad = false;
     public boolean lastStoppedByVad = false;
@@ -51,19 +51,19 @@ public class WitMic {
         System.loadLibrary("witvad");
     }
 
-    public native int VadInit(int vadTuning, int vadTimeout);
+    public native int VadInit(int vadSensitivity, int vadTimeout);
     public native int VadStillTalking(short[] samples, float[] fft_mags);
     public native int GetVadSamplesPerFrame();
     public native void VadClean();
 
-    public WitMic(IWitCoordinator witCoordinator, Wit.vadConfig vad, Wit.VadTuning vadTuning, int vadTimeout) throws IOException {
+    public WitMic(IWitCoordinator witCoordinator, Wit.vadConfig vad, int vadSensitivity, int vadTimeout) throws IOException {
         int inputStreamSize = getPipedInputStreamSize();
         in = new PipedInputStream(inputStreamSize);
         out = new PipedOutputStream();
         in.connect(out);
         _witCoordinator = witCoordinator;
         _vad = vad;
-        _vadTuning = vadTuning;
+        _vadSensitivity = vadSensitivity;
         _vadTimeout = vadTimeout;
     }
 
@@ -188,7 +188,7 @@ public class WitMic {
             int skippingSamples = 0;
 
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
-            VadInit(_vadTuning.ordinal(), _vadTimeout);
+            VadInit(_vadSensitivity, _vadTimeout);
 
             FloatFFT_1D fft = new FloatFFT_1D(GetVadSamplesPerFrame());
             float[] fft_mags = new float[GetVadSamplesPerFrame()/2];

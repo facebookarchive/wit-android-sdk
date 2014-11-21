@@ -5,10 +5,11 @@
 
 static s_wv_detector_cvad_state* wit_vad_g_struct = 0;
 
-int Java_ai_wit_sdk_WitMic_VadInit(JNIEnv *env, jobject obj, jint vadTuning, jint vadTimeout)
+int Java_ai_wit_sdk_WitMic_VadInit(JNIEnv *env, jobject obj, jint vadSensitivity, jint vadTimeout)
 {
     int sample_rate = 16000;
-    wit_vad_g_struct = wv_detector_cvad_init(sample_rate, (int)vadTuning, (int)vadTimeout);
+    vadSensitivity = (int)fmax(0,fmin(100,vadSensitivity)); //bounds-checking
+    wit_vad_g_struct = wv_detector_cvad_init(sample_rate, (int)vadSensitivity, (int)vadTimeout);
 
     return 0;
 }
