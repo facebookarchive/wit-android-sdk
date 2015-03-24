@@ -1,13 +1,13 @@
 buildscript {
     repositories {
-        maven { url 'http://repo1.maven.org/maven2' }
+        maven { url 'https://repo1.maven.org/maven2' }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:0.14+'
     }
 }
 
-apply plugin: 'android-library'
+apply plugin: 'com.android.library'
 
 task wrapper(type: Wrapper) {
     gradleVersion = '1.10'
@@ -30,7 +30,7 @@ android {
 
     defaultConfig {
         minSdkVersion 11
-        targetSdkVersion 19
+        targetSdkVersion 21
         ndk {
             moduleName "witvad"
             ldLibs "log"
