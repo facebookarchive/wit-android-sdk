@@ -9,6 +9,7 @@ import android.util.Log;
 import com.google.gson.JsonObject;
 
 import java.util.Date;
+import java.util.Locale;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import android.content.Context;
@@ -29,7 +30,7 @@ public class WitContextSetter {
     }
 
     protected void ensureTime(JsonObject context) {
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'", Locale.US);
         String nowAsISO8601 = df.format(new Date());
         context.addProperty(KEY_REFTIME, nowAsISO8601);
     }
