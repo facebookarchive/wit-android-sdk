@@ -91,7 +91,7 @@ s_wv_detector_cvad_state* wv_detector_cvad_init(int sample_rate, int sensitivity
     memset(cvad_state->dfc_history, 0, DETECTOR_CVAD_FRAMES_INIT * sizeof(double));
     cvad_state->sample_freq = sample_rate;
     cvad_state->max_start_sum = 0;
-    cvad_state->samples_per_frame = pow(ceil(log(cvad_state->sample_freq/120)/log(2)),2); //around 100 frames per second, but must be a power of two
+    cvad_state->samples_per_frame = pow(2,ceil(log(cvad_state->sample_freq/150)/log(2))); //around 100 frames per second, but must be a power of two
     memset(cvad_state->previous_state, 0, DETECTOR_CVAD_RESULT_MEMORY * sizeof(short int));
 
     wv_detector_cvad_set_sensitivity(cvad_state, sensitivity);
