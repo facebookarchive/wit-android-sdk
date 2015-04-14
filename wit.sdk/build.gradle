@@ -21,7 +21,11 @@ dependencies {
     compile('com.google.code.gson:gson:2.3')
     compile('org.apache.directory.studio:org.apache.commons.io:2.4')
     compile('com.github.wendykierp:JTransforms:3.0')
+<<<<<<< HEAD
     compile('com.android.support:appcompat-v7:21.0.3')
+=======
+    compile('com.android.support:appcompat-v7:19.1.0')
+>>>>>>> 051ae947630fcfb0d3676026f34c5e3e47dda23e
 }
 
 android {
