@@ -150,7 +150,7 @@ public class WitMic {
     }
 
 
-     class SamplesReaderThread extends Thread {
+    class SamplesReaderThread extends Thread {
         private PipedOutputStream iOut;
         private int iBufferSize;
         private WitMic _witMic;
@@ -205,7 +205,7 @@ public class WitMic {
                             _stopHandler.sendEmptyMessage(0);
                         }
                     }
-                    bytes = ShortToByte(buffer);
+                    bytes = ShortToByte_Twiddle_Method(buffer);
                     if (_streamingStarted) {
                         iOut.write(bytes, 0, nb * 2);
                     } else {
@@ -222,51 +222,71 @@ public class WitMic {
             _witMic.VadClean();
         }
 
-        protected void short2byte(short[] shorts, int nb, byte[] bytes)
+       /* protected byte[] short2byte(short[] shorts, int nb)
         {
-            for (int i = 0; i < nb; i++) {
-                bytes[i * 2] = (byte)(shorts[i] & 0xff);
-                bytes[i * 2 + 1] = (byte)((shorts[i] >> 8) & 0xff);
+            int i = 0;
+            ByteBuffer byteBuf = ByteBuffer.allocate(2*nb);
+            while (nb >= i) {
+                byteBuf.putShort(shorts[i]);
+                i++;
             }
+            return byteBuf.array();
+        }*/
+
+        byte [] ShortToByte_Twiddle_Method(short [] input)
+        {
+            int short_index, byte_index;
+            int iterations = input.length;
+
+            byte [] buffer = new byte[input.length * 2];
+
+            short_index = byte_index = 0;
+
+            for(/*NOP*/; short_index != iterations; /*NOP*/)
+            {
+                buffer[byte_index]     = (byte) (input[short_index] & 0x00FF);
+                buffer[byte_index + 1] = (byte) ((input[short_index] & 0xFF00) >> 8);
+
+                ++short_index; byte_index += 2;
+            }
+
+            return buffer;
         }
 
-         byte [] ShortToByte(short [] input)
-         {
-             int index;
-             int iterations = input.length;
 
-             ByteBuffer bb = ByteBuffer.allocate(input.length * 2);
+       /* byte[] MyShortToByte(short[] buffer) {
+            int N = buffer.length;
+            ByteBuffer byteBuf = ByteBuffer.allocate(N);
+            while (N >= i)
+                byte b = (byte)(buffer[i]/256);
+                byteBuf.put(b);
+                i++;
+            }
+            return byteBuf.array();
+        }*/
 
-             for(index = 0; index != iterations; ++index)
-             {
-                 bb.putShort(input[index]);
-             }
+        protected int streamPastBuffers(byte[][] pastBuffers) throws IOException {
+            int length = pastBuffers.length;
+            int sentCounter = 0;
 
-             return bb.array();
-         }
+            while ((length--) > 0) {
+                if (pastBuffers[length] != null) {
+                    iOut.write(pastBuffers[length]);
+                    sentCounter++;
+                }
+            }
 
-         protected int streamPastBuffers(byte[][] pastBuffers) throws IOException {
-             int length = pastBuffers.length;
-             int sentCounter = 0;
+            return sentCounter;
+        }
 
-             while ((length--) > 0) {
-                 if (pastBuffers[length] != null) {
-                     iOut.write(pastBuffers[length]);
-                     sentCounter++;
-                 }
-             }
-
-             return sentCounter;
-         }
-
-         protected void pushPastBuffer(byte[][] buffers, byte[] buffer) {
+        protected void pushPastBuffer(byte[][] buffers, byte[] buffer) {
             int length = buffers.length;
 
-             while ((--length) > 0) {
+            while ((--length) > 0) {
 
-                 buffers[length] = buffers[length - 1];
-             }
-             buffers[0] = buffer;
-         }
+                buffers[length] = buffers[length - 1];
+            }
+            buffers[0] = buffer;
+        }
     }
 }
