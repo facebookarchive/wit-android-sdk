@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.lang.Thread;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 
@@ -204,7 +205,7 @@ public class WitMic {
                             _stopHandler.sendEmptyMessage(0);
                         }
                     }
-                    short2byte(buffer, nb, bytes);
+                    bytes = ShortToByte(buffer);
                     if (_streamingStarted) {
                         iOut.write(bytes, 0, nb * 2);
                     } else {
@@ -228,6 +229,21 @@ public class WitMic {
                 bytes[i * 2 + 1] = (byte)((shorts[i] >> 8) & 0xff);
             }
         }
+
+         byte [] ShortToByte(short [] input)
+         {
+             int index;
+             int iterations = input.length;
+
+             ByteBuffer bb = ByteBuffer.allocate(input.length * 2);
+
+             for(index = 0; index != iterations; ++index)
+             {
+                 bb.putShort(input[index]);
+             }
+
+             return bb.array();
+         }
 
          protected int streamPastBuffers(byte[][] pastBuffers) throws IOException {
              int length = pastBuffers.length;
