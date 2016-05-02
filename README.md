@@ -1,5 +1,7 @@
 # wit-android-sdk
 
+*This SDK is community-maintained and likely broken. Please use the HTTP API or the Node.js/Python/Ruby SDKs for non-experimental needs (https://wit.ai/docs). We gladly accept pull requests*
+
 The SDK can capture intents and entities:
 
 - from the microphone of the device
