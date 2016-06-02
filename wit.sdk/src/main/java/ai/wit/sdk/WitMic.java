@@ -205,7 +205,7 @@ public class WitMic {
                             _stopHandler.sendEmptyMessage(0);
                         }
                     }
-                    bytes = ShortToByte_Twiddle_Method(buffer);
+                    bytes = short2byte(buffer);
                     if (_streamingStarted) {
                         iOut.write(bytes, 0, nb * 2);
                     } else {
@@ -222,18 +222,8 @@ public class WitMic {
             _witMic.VadClean();
         }
 
-       /* protected byte[] short2byte(short[] shorts, int nb)
-        {
-            int i = 0;
-            ByteBuffer byteBuf = ByteBuffer.allocate(2*nb);
-            while (nb >= i) {
-                byteBuf.putShort(shorts[i]);
-                i++;
-            }
-            return byteBuf.array();
-        }*/
 
-        byte [] ShortToByte_Twiddle_Method(short [] input)
+        byte [] short2byte(short [] input)
         {
             int short_index, byte_index;
             int iterations = input.length;
@@ -253,17 +243,6 @@ public class WitMic {
             return buffer;
         }
 
-
-       /* byte[] MyShortToByte(short[] buffer) {
-            int N = buffer.length;
-            ByteBuffer byteBuf = ByteBuffer.allocate(N);
-            while (N >= i)
-                byte b = (byte)(buffer[i]/256);
-                byteBuf.put(b);
-                i++;
-            }
-            return byteBuf.array();
-        }*/
 
         protected int streamPastBuffers(byte[][] pastBuffers) throws IOException {
             int length = pastBuffers.length;
