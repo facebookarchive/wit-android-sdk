@@ -29,6 +29,7 @@ public class WitSpeechRequestTask extends AsyncTask<InputStream, String, String>
     private final String AUTHORIZATION_HEADER = "Authorization";
     private final String ACCEPT_HEADER = "Accept";
     private final String CONTENT_TYPE_HEADER = "Content-Type";
+    private final String CONNECTION_HEADER = "Connection";
     private final String TRANSFER_ENCODING_HEADER = "Transfer-Encoding";
     private final String ACCEPT_VERSION = "application/vnd.wit." + WitRequest.version;
     private final String BEARER_FORMAT = "Bearer %s";
@@ -61,6 +62,7 @@ public class WitSpeechRequestTask extends AsyncTask<InputStream, String, String>
             urlConnection.setRequestProperty(AUTHORIZATION_HEADER, String.format(BEARER_FORMAT, _accessToken));
             urlConnection.setRequestProperty(ACCEPT_HEADER, ACCEPT_VERSION);
             urlConnection.setRequestProperty(CONTENT_TYPE_HEADER, _contentType);
+            urlConnection.setRequestProperty(CONNECTION_HEADER, "close");
             urlConnection.setRequestProperty(TRANSFER_ENCODING_HEADER, "chunked");
             urlConnection.setChunkedStreamingMode(0);
 
