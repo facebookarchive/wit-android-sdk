@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.lang.Thread;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 
@@ -149,7 +150,7 @@ public class WitMic {
     }
 
 
-     class SamplesReaderThread extends Thread {
+    class SamplesReaderThread extends Thread {
         private PipedOutputStream iOut;
         private int iBufferSize;
         private WitMic _witMic;
@@ -204,7 +205,7 @@ public class WitMic {
                             _stopHandler.sendEmptyMessage(0);
                         }
                     }
-                    short2byte(buffer, nb, bytes);
+                    bytes = short2byte(buffer);
                     if (_streamingStarted) {
                         iOut.write(bytes, 0, nb * 2);
                     } else {
@@ -221,36 +222,50 @@ public class WitMic {
             _witMic.VadClean();
         }
 
-        protected void short2byte(short[] shorts, int nb, byte[] bytes)
+
+        byte [] short2byte(short [] input)
         {
-            for (int i = 0; i < nb; i++) {
-                bytes[i * 2] = (byte)(shorts[i] & 0xff);
-                bytes[i * 2 + 1] = (byte)((shorts[i] >> 8) & 0xff);
+            int short_index, byte_index;
+            int iterations = input.length;
+
+            byte [] buffer = new byte[input.length * 2];
+
+            short_index = byte_index = 0;
+
+            for(/*NOP*/; short_index != iterations; /*NOP*/)
+            {
+                buffer[byte_index]     = (byte) (input[short_index] & 0x00FF);
+                buffer[byte_index + 1] = (byte) ((input[short_index] & 0xFF00) >> 8);
+
+                ++short_index; byte_index += 2;
             }
+
+            return buffer;
         }
 
-         protected int streamPastBuffers(byte[][] pastBuffers) throws IOException {
-             int length = pastBuffers.length;
-             int sentCounter = 0;
 
-             while ((length--) > 0) {
-                 if (pastBuffers[length] != null) {
-                     iOut.write(pastBuffers[length]);
-                     sentCounter++;
-                 }
-             }
+        protected int streamPastBuffers(byte[][] pastBuffers) throws IOException {
+            int length = pastBuffers.length;
+            int sentCounter = 0;
 
-             return sentCounter;
-         }
+            while ((length--) > 0) {
+                if (pastBuffers[length] != null) {
+                    iOut.write(pastBuffers[length]);
+                    sentCounter++;
+                }
+            }
 
-         protected void pushPastBuffer(byte[][] buffers, byte[] buffer) {
+            return sentCounter;
+        }
+
+        protected void pushPastBuffer(byte[][] buffers, byte[] buffer) {
             int length = buffers.length;
 
-             while ((--length) > 0) {
+            while ((--length) > 0) {
 
-                 buffers[length] = buffers[length - 1];
-             }
-             buffers[0] = buffer;
-         }
+                buffers[length] = buffers[length - 1];
+            }
+            buffers[0] = buffer;
+        }
     }
 }
